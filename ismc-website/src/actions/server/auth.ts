@@ -72,7 +72,7 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
     await createSession({
       account_id: account.account_id,
       email: account.email,
-      events: account.events,
+      events: account.events || [],
     });
 
   } catch (error) {

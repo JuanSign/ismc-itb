@@ -7,7 +7,7 @@ import { getAccountByID} from '../database/account';
 export type SessionPayload = {
   account_id: string;
   email: string;
-  events: string[] | null;
+  events: string[];
   expiresAt: Date;
 };
 
