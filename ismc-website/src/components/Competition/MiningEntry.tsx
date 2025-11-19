@@ -48,7 +48,7 @@ export function MiningEntry({ hasJoinedMC }: Props) {
   if (hasJoinedMC) {
     return (
       <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-        <Link href="/dashboard/competition/mc">Enter Competition</Link>
+        <Link href="/dashboard/mc">Enter Competition</Link>
       </Button>
     );
   }

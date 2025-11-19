@@ -123,8 +123,8 @@ export async function joinTeam(
         return { error: "An error occurred while joining." };
     }
 
-    revalidatePath("/dashboard/competition/mc");
-    redirect("/dashboard/competition/mc");
+    revalidatePath("/dashboard/mc");
+    redirect("/dashboard/mc");
 }
 
 export async function leaveTeam() {
@@ -140,8 +140,8 @@ export async function leaveTeam() {
         console.error("Leave team error:", error);
     }
 
-    revalidatePath("/dashboard/competition/mc");
-    redirect("/dashboard/competition");
+    revalidatePath("/dashboard/mc");
+    redirect("/dashboard");
 }
 
 export async function getTeamPageData() {
@@ -162,7 +162,7 @@ export async function getTeamPageData() {
         return data;
     } catch (e) {
         if ((e as Error).message === "User not assigned to a team.") {
-             redirect("/dashboard/competition/mc");
+             redirect("/dashboard/mc");
         }
         throw e;
     }
@@ -196,7 +196,7 @@ export async function updateMemberDetails(
 
         await updateMember(account_id, idNo, bloodType, illness, allergy, scKey, fpKey);
 
-        revalidatePath("/dashboard/competition/mc/team");
+        revalidatePath("/dashboard/mc/team");
         return { message: "Details saved successfully." };
     } catch (e) {
         console.error("Update Member Error:", e);
@@ -225,7 +225,7 @@ export async function uploadTeamDocuments(
         if (!team_id) return { error: "You are not on a team." };
 
         await updateTeamDocs(team_id, spKey, olKey);
-        revalidatePath("/dashboard/competition/mc/team");
+        revalidatePath("/dashboard/mc/team");
         return { message: "Documents uploaded successfully." };
     } catch { return { error: "Error uploading documents." }; }
 }
@@ -245,7 +245,7 @@ export async function uploadHealthDocuments(
         const team_id = await getTeamId(account_id);
         if (!team_id) return { error: "You are not on a team." };
         await updateHealthDocs(team_id, hdKey);
-        revalidatePath("/dashboard/competition/mc/team");
+        revalidatePath("/dashboard/mc/team");
         return { message: "Health Docs uploaded successfully." };
     } catch { return { error: "Error uploading health docs." }; }
 }
@@ -265,7 +265,7 @@ export async function updateBilling(
         const team_id = await getTeamId(account_id);
         if (!team_id) return { error: "You are not on a team." };
         await updatePayment(team_id, ppKey);
-        revalidatePath("/dashboard/competition/mc/team");
+        revalidatePath("/dashboard/mc/team");
         return { message: "Payment proof uploaded successfully." };
     } catch { return { error: "Error uploading payment proof." }; }
 }

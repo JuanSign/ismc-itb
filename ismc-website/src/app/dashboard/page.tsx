@@ -31,6 +31,7 @@ import {
   Camera
 } from "lucide-react";
 import { verifySession } from "@/actions/server/session";
+import { Toaster } from "sonner";
 
 function LockedSection({ 
   title, 
@@ -91,6 +92,7 @@ export default async function CompetitionPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <Toaster richColors/>
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
         
         {/* --- 1. MINING COMPETITION --- */}
