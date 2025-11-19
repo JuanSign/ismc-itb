@@ -84,12 +84,12 @@ function LockedSection({
 // --- Helper: Status Text ---
 const getTeamStatusText = (status: number) => {
   switch (status) {
-    case 0: return "Waiting for Team Member Verification";
-    case 1: return "Waiting for Core Document Uploads and Verification";
+    case 0: return "Waiting for Verification";
+    case 1: return "Waiting for Documents";
     case 2: return "Waiting for Payment";
     case 3: return "Waitlisted";
     case 4: return "Accepted";
-    default: return "Unknown Status";
+    default: return "Unknown";
   }
 };
 
@@ -114,19 +114,19 @@ export default async function TeamPage() {
         {/* --- STEP 1: TEAM INFO (Blue Shadow) --- */}
         <Card className="border-l-4 border-l-blue-600 shadow-sm">
           <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                <div>
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                         <Badge className="bg-blue-600 hover:bg-blue-700">STEP 1</Badge>
                         <span className="text-sm font-medium text-muted-foreground">Team Verification</span>
                     </div>
-                    <CardTitle className="text-2xl">{team.name}</CardTitle>
-                    <CardDescription className="mt-1">
-                    Team Code: <span className="font-mono text-foreground font-bold bg-muted px-1 rounded">{team.code}</span>
+                    <CardTitle className="text-2xl truncate">{team.name}</CardTitle>
+                    <CardDescription className="mt-1 flex items-center gap-2 flex-wrap">
+                       Team Code: <span className="font-mono text-foreground font-bold bg-muted px-1.5 rounded">{team.code}</span>
                     </CardDescription>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                    <div className="px-3 py-1 text-xs font-medium text-secondary-foreground border rounded-md bg-secondary/50">
+                <div className="flex flex-row md:flex-col items-center md:items-end gap-2 w-full md:w-auto justify-between md:justify-start">
+                    <div className="px-3 py-1 text-xs font-medium text-secondary-foreground border rounded-md bg-secondary/50 text-center">
                       {teamStatusText}
                     </div>
                     <TeamStatusBadge 
@@ -142,39 +142,48 @@ export default async function TeamPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-semibold">
-                Members
+                Members ({members.length}/7)
                 </h4>
             </div>
             
             <div className="flex flex-col gap-3">
               {members.map((member) => (
-                <div key={member.account_id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <Avatar>
+                <div key={member.account_id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors gap-3">
+                  {/* Left Side: Avatar + Text */}
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <Avatar className="shrink-0 h-10 w-10">
                       <AvatarImage src={member.fp_link || ""} alt={member.name || "Member"} />
-                      <AvatarFallback className="bg-primary/10 text-primary">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
                         {getInitials(member.name, member.email).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-medium text-sm">
-                        {member.name || member.email}
+                    
+                    <div className="min-w-0 flex-1">
+                      {/* Changed from <p> to <div> to avoid hydration errors if Badges render divs */}
+                      <div className="font-medium text-sm flex items-center gap-1.5 flex-wrap">
+                        <span className="truncate block max-w-[120px] sm:max-w-[200px]">
+                            {member.name || member.email}
+                        </span>
+                        
                         {member.account_id === currentUserAccountId && (
-                          <span className="text-xs text-blue-600 font-bold ml-2">(You)</span>
+                          <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 shrink-0">YOU</span>
                         )}
+                        
                         {member.role === 'MANAGER' && (
-                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded ml-2">Manager</span>
+                            <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-100 px-1.5 py-0.5 rounded shrink-0">MANAGER</span>
                         )}
-                      </p>
+                      </div>
+
                       {member.name && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate">
                           {member.email}
                         </p>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
+                  {/* Right Side: Status + Action */}
+                  <div className="flex items-center gap-3 shrink-0">
                     <MemberStatusBadge status={member.status} notes={member.notes}/>
                     <TeamMemberDialog 
                       member={member}
@@ -188,9 +197,9 @@ export default async function TeamPage() {
 
           <Separator />
 
-          <CardFooter className="pt-6 flex justify-between items-center">
+          <CardFooter className="pt-6 flex justify-between items-center gap-4">
             <span className="text-xs text-muted-foreground">
-                Need to leave? Warning: This cannot be undone if you are the last member.
+                Need to leave?
             </span>
             <TeamLeaveButton />
           </CardFooter>
@@ -201,9 +210,9 @@ export default async function TeamPage() {
         {isDocsLocked ? (
             <LockedSection 
               step="STEP 2"
-              title="Uploading Core Documents (SP & OL)"
-              description="Upload your Statement of Participants and Official Letter."
-              subtext="This step will unlock after all required team member details are accepted by the admin."
+              title="Core Documents"
+              description="Statement of Participants and Official Letter."
+              subtext="Unlocks after member verification."
               borderColorClass="border-l-orange-500"
             />
         ) : (
@@ -217,16 +226,14 @@ export default async function TeamPage() {
             />
         )}
 
+
         {/* --- STEP 3: PAYMENT (Green/Teal Shadow) --- */}
         {isPaymentLocked ? (
             <LockedSection 
               step="STEP 3"
               title="Payment"
-              description="Upload your proof of payment for the registration fee."
-              subtext={isDocsLocked 
-                  ? "This step will unlock after all member details are accepted." 
-                  : "This step will unlock after your Core Documents (SP & OL) are accepted."
-              }
+              description="Upload your proof of payment."
+              subtext="Unlocks after Document acceptance."
               borderColorClass="border-l-emerald-500"
             />
         ) : (
@@ -242,9 +249,9 @@ export default async function TeamPage() {
         {isHealthDocsLocked ? (
             <LockedSection 
               step="STEP 4"
-              title="Health Documents (HD)"
-              description="This is the final document submission step."
-              subtext={"This step will unlock after your Payment Proof is accepted."}
+              title="Health Docs"
+              description="Final health document submission."
+              subtext="Unlocks after Payment acceptance."
               borderColorClass="border-l-indigo-500"
             />
         ) : (
