@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MiningEntry } from "@/components/Competition/MiningEntry";
+import { CompetitionEntry } from "@/components/Competition/CompetitionEntry";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,10 @@ import {
 } from "lucide-react";
 import { verifySession } from "@/actions/server/session";
 import { Toaster } from "sonner";
+
+// --- Import Specific Server Actions ---
+import { createTeam as createMC, joinTeam as joinMC } from "@/actions/server/mc";
+import { createTeam as createHack, joinTeam as joinHack } from "@/actions/server/hackathon";
 
 function LockedSection({ 
   title, 
@@ -82,9 +86,12 @@ export default async function CompetitionPage() {
 
   const insightEvents = ["PAPER", "HACK", "POSTER", "PHOTO"]; 
 
+  // Check memberships
   const hasJoinedMC = session.events!.includes("MC");
+  const hasJoinedHack = session.events!.includes("HACK");
   const hasJoinedInsight = session.events!.some((e) => insightEvents.includes(e));
 
+  // Lock Logic
   const isMCLocked = hasJoinedInsight; 
   const isInsightLocked = hasJoinedMC; 
 
@@ -127,7 +134,15 @@ export default async function CompetitionPage() {
               <Button variant="outline" asChild>
                 <Link href="/dashboard/mc/details">Show More</Link>
               </Button>
-              <MiningEntry hasJoinedMC={hasJoinedMC} />
+              
+              {/* Mining Competition Entry Button */}
+              <CompetitionEntry 
+                title="Mining Competition"
+                hasJoined={hasJoinedMC}
+                redirectPath="/dashboard/competition/mc/team"
+                createAction={createMC}
+                joinAction={joinMC}
+              />
             </CardFooter>
           </Card>
         )}
@@ -203,9 +218,16 @@ export default async function CompetitionPage() {
                       <Button size="sm" variant="outline" asChild>
                           <Link href="/dashboard/hackathon/details">Show More</Link>
                       </Button>
-                      <Button size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                          <Link href="/dashboard/hackathon/register">Enter</Link>
-                      </Button>
+                      
+                      {/* Hackathon Entry Button */}
+                      <CompetitionEntry 
+                        title="Hackathon"
+                        hasJoined={hasJoinedHack}
+                        redirectPath="/dashboard/hackathon"
+                        createAction={createHack}
+                        joinAction={joinHack}
+                        teamNamePlaceholder="e.g. Innovation Squad"
+                      />
                     </div>
                   </AccordionContent>
                 </AccordionItem>

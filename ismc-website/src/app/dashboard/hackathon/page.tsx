@@ -1,5 +1,7 @@
-import { getTeamPageData, leaveTeam } from "@/actions/server/mc"; // Imported leaveTeam
-import { TeamLeaveButton } from "@/components/Competition/general/TeamLeaveButton";
+import { getTeamPageData, leaveTeam } from "@/actions/server/hackathon"; // Imported leaveTeam
+import { updateBilling } from "@/actions/server/hackathon"; 
+
+import { TeamLeaveButton } from "@/components/Competition/general/TeamLeaveButton"; // Updated Import
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
@@ -10,16 +12,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { TeamMemberDialog } from "@/components/Competition/mc/TeamMemberDialog";
-import { PaymentSection } from "@/components/Competition/general/PaymentSection";
-import { DocumentsSection } from "@/components/Competition/mc/DocumentSection";
-import { HealthDocsSection } from "@/components/Competition/mc/HealthDocsSection";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { TeamStatusBadge } from "@/components/Competition/general/TeamStatusBadge";
-import { updateBilling } from "@/actions/server/hackathon";
+
+import { TeamMemberDialog } from "@/components/Competition/hack/TeamMemberDialog";
+import { PaymentSection } from "@/components/Competition/general/PaymentSection";
+import { SubmissionSection } from "@/components/Competition/hack/SubmissionSection";
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
 
 // --- Helper: Initials ---
@@ -94,7 +95,7 @@ const getTeamStatusText = (status: number) => {
   }
 };
 
-export default async function TeamPage() {
+export default async function HackathonTeamPage() {
   const { team, members, currentUserAccountId } = await getTeamPageData();
 
   const teamStatus: number = team.status as number;
@@ -103,16 +104,15 @@ export default async function TeamPage() {
   const currentUser = members.find(m => m.account_id === currentUserAccountId);
   const isManager = currentUser?.role === 'MANAGER';
 
-  // Locking Logic based on Status
-  const isDocsLocked = teamStatus === 0; 
-  const isPaymentLocked = teamStatus < 2; 
-  const isHealthDocsLocked = teamStatus < 3; 
+  // Locking Logic
+  const isPaymentLocked = teamStatus < 1; 
+  const isSubmissionLocked = teamStatus < 2; 
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
         
-        {/* --- STEP 1: TEAM INFO (Blue Shadow) --- */}
+        {/* --- STEP 1: TEAM INFO (Blue) --- */}
         <Card className="border-l-4 border-l-blue-600 shadow-sm">
           <CardHeader>
             <div className="flex flex-col md:flex-row justify-between items-start gap-4">
@@ -130,27 +130,18 @@ export default async function TeamPage() {
                     <div className="px-3 py-1 text-xs font-medium text-secondary-foreground border rounded-md bg-secondary/50 text-center">
                       {teamStatusText}
                     </div>
-                    <TeamStatusBadge 
-                      status={teamStatus} 
-                      notes={team.notes} 
-                    />
+                    <TeamStatusBadge status={teamStatus} notes={team.notes} />
                 </div>
             </div>
           </CardHeader>
-          
           <Separator />
-
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-semibold">
-                Members ({members.length}/7)
-                </h4>
+                <h4 className="text-lg font-semibold">Members ({members.length}/5)</h4>
             </div>
-            
             <div className="flex flex-col gap-3">
               {members.map((member) => (
                 <div key={member.account_id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors gap-3">
-                  {/* Left Side: Avatar + Text */}
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Avatar className="shrink-0 h-10 w-10">
                       <AvatarImage src={member.fp_link || ""} alt={member.name || "Member"} />
@@ -158,31 +149,15 @@ export default async function TeamPage() {
                         {getInitials(member.name, member.email).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-sm flex items-center gap-1.5 flex-wrap">
-                        <span className="truncate block max-w-[120px] sm:max-w-[200px]">
-                            {member.name || member.email}
-                        </span>
-                        
-                        {member.account_id === currentUserAccountId && (
-                          <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 shrink-0">YOU</span>
-                        )}
-                        
-                        {member.role === 'MANAGER' && (
-                            <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-100 px-1.5 py-0.5 rounded shrink-0">MANAGER</span>
-                        )}
+                        <span className="truncate block max-w-[120px] sm:max-w-[200px]">{member.name || member.email}</span>
+                        {member.account_id === currentUserAccountId && <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 shrink-0">YOU</span>}
+                        {member.role === 'MANAGER' && <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-100 px-1.5 py-0.5 rounded shrink-0">MANAGER</span>}
                       </div>
-
-                      {member.name && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {member.email}
-                        </p>
-                      )}
+                      {member.name && <p className="text-xs text-muted-foreground truncate">{member.email}</p>}
                     </div>
                   </div>
-                  
-                  {/* Right Side: Status + Action */}
                   <div className="flex items-center gap-3 shrink-0">
                     <MemberStatusBadge status={member.status} notes={member.notes}/>
                     <TeamMemberDialog 
@@ -194,44 +169,21 @@ export default async function TeamPage() {
               ))}
             </div>
           </CardContent>
-
           <Separator />
-
           <CardFooter className="pt-6 flex justify-between items-center gap-4">
-            <span className="text-xs text-muted-foreground">
-                Need to leave?
-            </span>
+            <span className="text-xs text-muted-foreground">Need to leave?</span>
             {/* Generalized Leave Button */}
             <TeamLeaveButton 
                 action={leaveTeam} 
-                title="Mining Competition" 
+                title="Hackathon" 
             />
           </CardFooter>
         </Card>
 
-        {/* ... Other Sections (Docs, Payment, Health) remain unchanged ... */}
-        {isDocsLocked ? (
-            <LockedSection 
-              step="STEP 2"
-              title="Core Documents"
-              description="Statement of Participants and Official Letter."
-              subtext="Unlocks after member verification."
-              borderColorClass="border-l-orange-500"
-            />
-        ) : (
-            <DocumentsSection 
-              spLink={team.sp_link}
-              olLink={team.ol_link}
-              spVerified={team.sp_verified} 
-              olVerified={team.ol_verified}
-              step="STEP 2"
-              className="border-l-orange-500 shadow-sm" 
-            />
-        )}
-
+        {/* --- STEP 3: PAYMENT (Green) --- */}
         {isPaymentLocked ? (
             <LockedSection 
-              step="STEP 3"
+              step="STEP 2"
               title="Payment"
               description="Upload your proof of payment."
               subtext="Unlocks after Document acceptance."
@@ -242,31 +194,35 @@ export default async function TeamPage() {
               paymentProofUrl={team.pp_link}
               ppVerified={team.pp_verified}
               step="STEP 3"
-              className="border-l-emerald-500 shadow-sm" 
-              bankName="BCA"
-              accountHolder="ISMC XV"
-              accountNumber="1234567890"
-              price="100.000"
+              className="border-l-emerald-500 shadow-sm"
+              bankName="Bank Mandiri"
+              accountNumber="13100100100"
+              accountHolder="Hackathon Committee"
+              price="IDR 150,000"
               uploadAction={updateBilling}
             />
         )}
-        
-        {isHealthDocsLocked ? (
+
+        {/* --- STEP 4: SUBMISSION (Purple) --- */}
+        {isSubmissionLocked ? (
             <LockedSection 
-              step="STEP 4"
-              title="Health Docs"
-              description="Final health document submission."
+              step="STEP 3"
+              title="Project Submission"
+              description="Final project details and files."
               subtext="Unlocks after Payment acceptance."
               borderColorClass="border-l-indigo-500"
             />
         ) : (
-            <HealthDocsSection 
-              hdLink={team.hd_link}
-              hdVerified={team.hd_verified}
-              step="STEP 4"
-              className="border-l-indigo-500 shadow-sm" 
+            <SubmissionSection 
+                sdLink={team.sd_link}
+                sdd={team.sdd}
+                extLinks={team.ext_link}
+                subVerified={team.sub_verified}
+                step="STEP 4"
+                className="border-l-indigo-500 shadow-sm"
             />
         )}
+
       </div>
     </div>
   );

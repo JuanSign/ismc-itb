@@ -1,14 +1,8 @@
 "use client";
 
-import React, { useState, useActionState, useEffect } from "react";
+import { useState, useActionState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { joinTeam, createTeam } from "@/actions/server/mc"; 
-import {
-  type CreateTeamFormState,
-  type JoinTeamFormState,
-} from "@/actions/types/MC";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,18 +17,35 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, ShieldCheck, User } from "lucide-react";
 
+type ActionState = { error?: string; message?: string };
+
 type Props = {
-  hasJoinedMC: boolean;
+  title: string;
+  hasJoined: boolean;
+  redirectPath: string;
+  
+  createAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
+  joinAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
+
+  teamNamePlaceholder?: string;
+  teamCodePlaceholder?: string;
 };
 
-const initialCreateState: CreateTeamFormState = {};
-const initialJoinState: JoinTeamFormState = {};
+const initialState: ActionState = {};
 
-export function MiningEntry({ hasJoinedMC }: Props) {
+export function CompetitionEntry({ 
+  title,
+  hasJoined, 
+  redirectPath,
+  createAction, 
+  joinAction,
+  teamNamePlaceholder = "e.g. The Rock Breakers",
+  teamCodePlaceholder = "e.g. ABCDE"
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
   
-  const [createState, createAction, isCreating] = useActionState(createTeam, initialCreateState);
-  const [joinState, joinAction, isJoining] = useActionState(joinTeam, initialJoinState);
+  const [createState, createFormAction, isCreating] = useActionState(createAction, initialState);
+  const [joinState, joinFormAction, isJoining] = useActionState(joinAction, initialState);
 
   useEffect(() => {
     if (createState.error) {
@@ -45,10 +56,10 @@ export function MiningEntry({ hasJoinedMC }: Props) {
     }
   }, [createState, joinState]);
 
-  if (hasJoinedMC) {
+  if (hasJoined) {
     return (
       <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-        <Link href="/dashboard/mc">Enter Competition</Link>
+        <Link href={redirectPath}>Enter Competition</Link>
       </Button>
     );
   }
@@ -60,9 +71,9 @@ export function MiningEntry({ hasJoinedMC }: Props) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>It Looks Like you don&apos;t have a Team Yet!</DialogTitle>
+          <DialogTitle>Join {title}</DialogTitle>
           <DialogDescription>
-            To participate in the Mining Competition, you must belong to a team.
+            To participate in the {title}, you must belong to a team.
           </DialogDescription>
         </DialogHeader>
 
@@ -74,19 +85,18 @@ export function MiningEntry({ hasJoinedMC }: Props) {
 
           {/* --- CREATE TEAM TAB --- */}
           <TabsContent value="create" className="space-y-4 py-4">
-            <form action={createAction} className="flex flex-col gap-4">
+            <form action={createFormAction} className="flex flex-col gap-4">
               <div className="space-y-2">
                 <Label htmlFor="teamName">Team Name</Label>
                 <Input 
                   id="teamName" 
                   name="teamName" 
-                  placeholder="e.g. The Rock Breakers" 
+                  placeholder={teamNamePlaceholder} 
                   required 
                   disabled={isCreating}
                 />
               </div>
 
-              {/* Informational Text regarding Role */}
               <div className="bg-muted/50 p-3 rounded-md flex items-start gap-3 text-sm text-muted-foreground">
                 <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p>
@@ -108,19 +118,18 @@ export function MiningEntry({ hasJoinedMC }: Props) {
 
           {/* --- JOIN TEAM TAB --- */}
           <TabsContent value="join" className="space-y-4 py-4">
-             <form action={joinAction} className="flex flex-col gap-4">
+             <form action={joinFormAction} className="flex flex-col gap-4">
               <div className="space-y-2">
                 <Label htmlFor="teamCode">Team Code</Label>
                 <Input 
                   id="teamCode" 
                   name="teamCode" 
-                  placeholder="e.g. ABCDE" 
+                  placeholder={teamCodePlaceholder} 
                   required 
                   disabled={isJoining}
                 />
               </div>
 
-              {/* Informational Text regarding Role */}
               <div className="bg-muted/50 p-3 rounded-md flex items-start gap-3 text-sm text-muted-foreground">
                 <User className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p>
