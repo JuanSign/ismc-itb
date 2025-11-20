@@ -36,6 +36,7 @@ import { Toaster } from "sonner";
 // --- Import Specific Server Actions ---
 import { createTeam as createMC, joinTeam as joinMC } from "@/actions/server/mc";
 import { createTeam as createHack, joinTeam as joinHack } from "@/actions/server/hackathon";
+import { createTeam as createPaper, joinTeam as joinPaper } from "@/actions/server/paper";
 
 function LockedSection({ 
   title, 
@@ -89,6 +90,7 @@ export default async function CompetitionPage() {
   // Check memberships
   const hasJoinedMC = session.events!.includes("MC");
   const hasJoinedHack = session.events!.includes("HACK");
+  const hasJoinedPaper = session.events!.includes("PAPER");
   const hasJoinedInsight = session.events!.some((e) => insightEvents.includes(e));
 
   // Lock Logic
@@ -193,9 +195,14 @@ export default async function CompetitionPage() {
                       <Button size="sm" variant="outline" asChild>
                           <Link href="/dashboard/paper/details">Show More</Link>
                       </Button>
-                      <Button size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                          <Link href="/dashboard/paper/register">Enter</Link>
-                      </Button>
+                      <CompetitionEntry 
+                        title="Paper Competition"
+                        hasJoined={hasJoinedPaper}
+                        redirectPath="/dashboard/paper"
+                        createAction={createPaper}
+                        joinAction={joinPaper}
+                        teamNamePlaceholder="e.g. Innovation Squad"
+                      />
                     </div>
                   </AccordionContent>
                 </AccordionItem>
