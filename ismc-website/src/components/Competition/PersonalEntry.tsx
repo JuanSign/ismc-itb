@@ -2,9 +2,9 @@
 
 import React, { useActionState, useEffect } from "react";
 import { toast } from "sonner";
-import { registerPoster } from "@/actions/server/poster";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,14 +17,38 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const initialState = { error: "" };
+type ActionState = { error?: string };
 
-export function PosterEntry() {
-  const [state, action, isPending] = useActionState(registerPoster, initialState);
+type Props = {
+  title: string;       
+  description?: string; 
+  action: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
+  hasJoined: boolean;
+  redirectPath: string; 
+};
+
+const initialState: ActionState = { error: "" };
+
+export function PersonalEntry({ 
+  title, 
+  description = "This is an individual competition. By clicking continue, you will be registered as a participant.", 
+  action, 
+  hasJoined, 
+  redirectPath 
+}: Props) {
+  const [state, formAction, isPending] = useActionState(action, initialState);
 
   useEffect(() => {
     if (state?.error) toast.error(state.error);
   }, [state]);
+
+  if (hasJoined) {
+    return (
+      <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Link href={redirectPath}>Enter Competition</Link>
+      </Button>
+    );
+  }
 
   return (
     <AlertDialog>
@@ -33,14 +57,14 @@ export function PosterEntry() {
         </AlertDialogTrigger>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Join Poster Competition</AlertDialogTitle>
+                <AlertDialogTitle>Join {title}</AlertDialogTitle>
                 <AlertDialogDescription>
-                    This is an individual competition. By clicking continue, you will be registered as a participant.
+                    {description}
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <form action={action}>
+                <form action={formAction}>
                     <AlertDialogAction type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={isPending}>
                         {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Joining...</> : "Continue"}
                     </AlertDialogAction>

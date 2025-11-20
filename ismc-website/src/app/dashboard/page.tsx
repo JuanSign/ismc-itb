@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CompetitionEntry } from "@/components/Competition/CompetitionEntry";
 import { cn } from "@/lib/utils";
 
+// --- Components ---
+import { CompetitionEntry } from "@/components/Competition/CompetitionEntry";
+import { PersonalEntry } from "@/components/Competition/PersonalEntry";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,14 +32,15 @@ import {
   Cpu,
   Camera
 } from "lucide-react";
-import { verifySession } from "@/actions/server/session";
 import { Toaster } from "sonner";
 
-// --- Import Specific Server Actions ---
+// --- Actions ---
+import { verifySession } from "@/actions/server/session";
 import { createTeam as createMC, joinTeam as joinMC } from "@/actions/server/mc";
 import { createTeam as createHack, joinTeam as joinHack } from "@/actions/server/hackathon";
 import { createTeam as createPaper, joinTeam as joinPaper } from "@/actions/server/paper";
-import { PosterEntry } from "@/components/Competition/PosterEntry";
+import { registerPoster } from "@/actions/server/poster";
+import { registerPhoto } from "@/actions/server/photo";
 
 function LockedSection({ 
   title, 
@@ -90,8 +93,12 @@ export default async function CompetitionPage() {
 
   // Check memberships
   const hasJoinedMC = session.events!.includes("MC");
+  
   const hasJoinedHack = session.events!.includes("HACK");
   const hasJoinedPaper = session.events!.includes("PAPER");
+  const hasJoinedPoster = session.events!.includes("POSTER");
+  const hasJoinedPhoto = session.events!.includes("PHOTO");
+
   const hasJoinedInsight = session.events!.some((e) => insightEvents.includes(e));
 
   // Lock Logic
@@ -137,8 +144,6 @@ export default async function CompetitionPage() {
               <Button variant="outline" asChild>
                 <Link href="/dashboard/mc/details">Show More</Link>
               </Button>
-              
-              {/* Mining Competition Entry Button */}
               <CompetitionEntry 
                 title="Mining Competition"
                 hasJoined={hasJoinedMC}
@@ -175,7 +180,6 @@ export default async function CompetitionPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               
-              {/* ACCORDION SECTION */}
               <Accordion type="single" collapsible className="w-full">
                 
                 {/* A. PAPER COMPETITION */}
@@ -188,8 +192,7 @@ export default async function CompetitionPage() {
                   </AccordionTrigger>
                   <AccordionContent className="flex flex-col gap-4 px-1 pb-6">
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Scientific writing competition combining business cases with academic mining studies. 
-                      Analyze strategic issues in the mining industry through simultaneous technical and business perspectives.
+                      Scientific writing competition combining business cases with academic mining studies.
                     </p>
                     <p className="text-sm font-medium">Open to teams of 1-3 participants.</p>
                     <div className="flex gap-2 justify-end">
@@ -199,7 +202,7 @@ export default async function CompetitionPage() {
                       <CompetitionEntry 
                         title="Paper Competition"
                         hasJoined={hasJoinedPaper}
-                        redirectPath="/dashboard/paper"
+                        redirectPath="/dashboard/competition/paper/team"
                         createAction={createPaper}
                         joinAction={joinPaper}
                         teamNamePlaceholder="e.g. Innovation Squad"
@@ -218,23 +221,20 @@ export default async function CompetitionPage() {
                   </AccordionTrigger>
                   <AccordionContent className="flex flex-col gap-4 px-1 pb-6">
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Innovation-based team competition using Industry 4.0 technology (AI, IoT, Digital Twins) 
-                      to solve real-world mining operational problems. Output can be hardware or software.
+                      Innovation-based team competition using Industry 4.0 technology to solve real-world mining problems.
                     </p>
                     <p className="text-sm font-medium">Open to teams of 3-5 participants.</p>
                     <div className="flex gap-2 justify-end">
                       <Button size="sm" variant="outline" asChild>
                           <Link href="/dashboard/hackathon/details">Show More</Link>
                       </Button>
-                      
-                      {/* Hackathon Entry Button */}
                       <CompetitionEntry 
                         title="Hackathon"
                         hasJoined={hasJoinedHack}
-                        redirectPath="/dashboard/hackathon"
+                        redirectPath="/dashboard/competition/hackathon/team"
                         createAction={createHack}
                         joinAction={joinHack}
-                        teamNamePlaceholder="e.g. Innovation Squad"
+                        teamNamePlaceholder="e.g. Tech Miners"
                       />
                     </div>
                   </AccordionContent>
@@ -250,15 +250,20 @@ export default async function CompetitionPage() {
                   </AccordionTrigger>
                   <AccordionContent className="flex flex-col gap-4 px-1 pb-6">
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Visually communicate complex engineering concepts and strategic mining issues through creative design. 
-                      Summarize ideas into a compact, structured, and impactful visual narrative.
+                      Visually communicate complex engineering concepts through creative design.
                     </p>
                     <p className="text-sm font-medium">Individual Competition (1 Participant).</p>
                     <div className="flex gap-2 justify-end">
                       <Button size="sm" variant="outline" asChild>
                           <Link href="/dashboard/poster/details">Show More</Link>
                       </Button>
-                      <PosterEntry/>
+                      
+                      <PersonalEntry 
+                        title="Poster Competition"
+                        action={registerPoster}
+                        hasJoined={hasJoinedPoster}
+                        redirectPath="/dashboard/competition/poster"
+                      />
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -273,17 +278,20 @@ export default async function CompetitionPage() {
                   </AccordionTrigger>
                   <AccordionContent className="flex flex-col gap-4 px-1 pb-6">
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Capture broad earth science perspectives—geology, environment, energy, and sustainability. 
-                      Present visual works that are aesthetic and tell a story about modern earth issues.
+                      Capture broad earth science perspectives and present visual works that tell a story.
                     </p>
                     <p className="text-sm font-medium">Individual Competition (1 Participant).</p>
                     <div className="flex gap-2 justify-end">
                       <Button size="sm" variant="outline" asChild>
                           <Link href="/dashboard/photo/details">Show More</Link>
                       </Button>
-                      <Button size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                          <Link href="/dashboard/photo/register">Enter</Link>
-                      </Button>
+                      
+                      <PersonalEntry 
+                        title="Photo Competition"
+                        action={registerPhoto}
+                        hasJoined={hasJoinedPhoto}
+                        redirectPath="/dashboard/competition/photo"
+                      />
                     </div>
                   </AccordionContent>
                 </AccordionItem>
