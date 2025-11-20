@@ -37,6 +37,7 @@ import { Toaster } from "sonner";
 import { createTeam as createMC, joinTeam as joinMC } from "@/actions/server/mc";
 import { createTeam as createHack, joinTeam as joinHack } from "@/actions/server/hackathon";
 import { createTeam as createPaper, joinTeam as joinPaper } from "@/actions/server/paper";
+import { PosterEntry } from "@/components/Competition/PosterEntry";
 
 function LockedSection({ 
   title, 
@@ -257,9 +258,7 @@ export default async function CompetitionPage() {
                       <Button size="sm" variant="outline" asChild>
                           <Link href="/dashboard/poster/details">Show More</Link>
                       </Button>
-                      <Button size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                          <Link href="/dashboard/poster/register">Enter</Link>
-                      </Button>
+                      <PosterEntry/>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
