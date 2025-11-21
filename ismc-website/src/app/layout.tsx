@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { gigaSans, poppins } from "./fonts";
 import "./globals.css";
+import PageTransition from "@/components/PageTransition/PageTransition";
 
 export const metadata: Metadata = {
   title: "ISMC XV",
@@ -17,7 +18,9 @@ export default function RootLayout({
       <body
         className={`${gigaSans.variable} ${poppins.variable} antialiased dark`}
       >
+        <PageTransition>
         {children}
+        </PageTransition>
       </body>
     </html>
   );
