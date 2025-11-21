@@ -39,9 +39,9 @@ type PaymentProps = {
 
 function VerificationBadge({ status }: { status: number | null }) {
   const config = {
-    0: { icon: <Hourglass className="h-4 w-4" />, className: "text-yellow-600 bg-yellow-50 border-yellow-300" },
-    1: { icon: <XCircle className="h-4 w-4" />, className: "text-destructive bg-destructive/10 border-destructive/50" },
-    2: { icon: <CheckCircle2 className="h-4 w-4" />, className: "text-emerald-600 bg-emerald-50 border-emerald-400" },
+    0: { icon: <Hourglass className="h-4 w-4" />, className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
+    1: { icon: <XCircle className="h-4 w-4" />, className: "text-red-400 bg-red-400/10 border-red-400/20" },
+    2: { icon: <CheckCircle2 className="h-4 w-4" />, className: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
   }[status ?? 0] || { icon: null, className: "" };
 
   return (
@@ -72,8 +72,11 @@ export function PaymentSection({
     toast.success(`${label} copied to clipboard!`);
   };
 
+  // Use glassmorphism card class
+  const cardClass = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
+
   return (
-    <Card className={cn("border-l-4", className)}>
+    <Card className={cn("border-l-4", cardClass, className)}>
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
             <Badge 
@@ -81,18 +84,18 @@ export function PaymentSection({
             >
                 {step}
             </Badge>
-            <span className="text-sm font-medium text-muted-foreground">Payment Verification</span>
+            <span className="text-sm font-medium text-slate-400">Payment Verification</span>
         </div>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <CardTitle>Payment</CardTitle>
-                <CardDescription className="mt-1">
+                <CardTitle className="text-white">Payment</CardTitle>
+                <CardDescription className="mt-1 text-slate-400">
                   Select a method below and transfer the EXACT amount.
                 </CardDescription>
             </div>
             <div className="flex flex-col items-end">
-                 <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Amount</span>
-                 <span className="text-2xl font-bold text-primary">{price}</span>
+                 <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Amount</span>
+                 <span className="text-2xl font-bold text-yellow-400 tracking-tight">{price}</span>
             </div>
         </div>
       </CardHeader>
@@ -104,34 +107,34 @@ export function PaymentSection({
             {paymentMethods.map((method, index) => (
                 <div 
                     key={index} 
-                    className="group relative overflow-hidden rounded-xl border bg-muted/30 p-5 transition-all hover:border-primary/50 hover:bg-muted/50"
+                    className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-5 transition-all hover:border-blue-500/50 hover:bg-white/10"
                 >
                     {/* Background Decorator */}
-                    <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-blue-500/10 opacity-0 transition-opacity group-hover:opacity-100" />
                     
                     <div className="relative space-y-4">
                         {/* Header: Bank Name */}
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-background border shadow-sm">
-                                <Building2 className="h-5 w-5 text-muted-foreground" />
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 border border-white/10 shadow-sm">
+                                <Building2 className="h-5 w-5 text-slate-400" />
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bank Transfer</span>
-                                <span className="font-bold text-foreground">{method.bankName}</span>
+                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Bank Transfer</span>
+                                <span className="font-bold text-white">{method.bankName}</span>
                             </div>
                         </div>
 
                         {/* Body: Account Number */}
                         <div className="space-y-1.5">
-                            <span className="text-xs text-muted-foreground">Account Number</span>
+                            <span className="text-xs text-slate-400">Account Number</span>
                             <div className="flex items-center gap-2">
-                                <code className="text-xl font-mono font-semibold tracking-tight text-primary">
+                                <code className="text-xl font-mono font-semibold tracking-tight text-blue-300">
                                     {method.accountNumber}
                                 </code>
                                 <Button 
                                     size="icon" 
                                     variant="ghost" 
-                                    className="h-8 w-8 opacity-70 hover:opacity-100 hover:bg-primary/10 hover:text-primary"
+                                    className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10"
                                     onClick={() => copyToClipboard(method.accountNumber, method.bankName)}
                                 >
                                     <Copy className="h-4 w-4" />
@@ -140,8 +143,8 @@ export function PaymentSection({
                         </div>
 
                         {/* Footer: Account Holder */}
-                        <div className="pt-2 border-t border-dashed">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="pt-2 border-t border-white/10 border-dashed">
+                            <div className="flex items-center gap-2 text-sm text-slate-400">
                                 <CreditCard className="h-3.5 w-3.5" />
                                 <span>{method.accountHolder}</span>
                             </div>
@@ -153,10 +156,10 @@ export function PaymentSection({
 
         <div className="relative">
             <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+                <span className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
+                <span className="bg-slate-900 px-2 text-slate-500">
                     Then Upload Proof
                 </span>
             </div>

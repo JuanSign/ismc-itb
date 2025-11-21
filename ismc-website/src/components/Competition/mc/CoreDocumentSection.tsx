@@ -14,12 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { FileUploaderField } from "@/components/FileUploaderField/FileUploaderField";
 
-// --- Verification Badge Component ---
+// --- Verification Badge Component (Dark Mode Adapted) ---
 function VerificationBadge({ status }: { status: number | null }) {
   const config = {
-    0: { icon: <Hourglass className="h-4 w-4" />, className: "text-yellow-600 bg-yellow-50 border-yellow-300" },
-    1: { icon: <XCircle className="h-4 w-4" />, className: "text-destructive bg-destructive/10 border-destructive/50" },
-    2: { icon: <CheckCircle2 className="h-4 w-4" />, className: "text-emerald-600 bg-emerald-50 border-emerald-400" },
+    // Lighter colors for dark background
+    0: { icon: <Hourglass className="h-4 w-4" />, className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
+    1: { icon: <XCircle className="h-4 w-4" />, className: "text-red-400 bg-red-400/10 border-red-400/20" },
+    2: { icon: <CheckCircle2 className="h-4 w-4" />, className: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
   }[status ?? 0] || { icon: null, className: "" };
 
   return (
@@ -52,30 +53,33 @@ export function CoreDocumentsSection({
   step?: string;
   className?: string;
 }) {
+  // Glass Card Style
+  const cardClass = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
+
   return (
-    <Card className={cn("border-l-4", className)}> 
+    <Card className={cn("border-l-4", cardClass, className)}> 
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
-          <Badge className="bg-orange-500 hover:bg-orange-600">{step}</Badge>
-          <span className="text-sm font-medium text-muted-foreground">Core Documents</span>
+          <Badge className="bg-orange-500 hover:bg-orange-400 text-white">{step}</Badge>
+          <span className="text-sm font-medium text-slate-400">Core Documents</span>
         </div>
-        <CardTitle>Uploading Core Documents</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-white">Uploading Core Documents</CardTitle>
+        <CardDescription className="text-slate-400">
           Download the templates, fill them out, and upload the PDF versions here.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         
-        {/* Download Section */}
-        <div className="flex flex-col gap-3 p-4 bg-muted/30 rounded-lg border border-dashed">
-          <h4 className="font-medium text-sm text-muted-foreground">Download Templates</h4>
+        {/* Download Section - Darker BG */}
+        <div className="flex flex-col gap-3 p-4 bg-white/5 rounded-lg border border-white/10 border-dashed">
+          <h4 className="font-medium text-sm text-slate-300">Download Templates</h4>
           <div className="flex flex-wrap gap-3">
-            <Button asChild variant="outline" size="sm" className="bg-background">
+            <Button asChild variant="outline" size="sm" className="bg-transparent border-white/20 text-slate-200 hover:bg-white/10 hover:text-white">
                 <a href={PARTICIPANT_STATEMENT_URL} download>
                 <Download className="mr-2 h-4 w-4" /> Statement of Participants
                 </a>
             </Button>
-            <Button asChild variant="outline" size="sm" className="bg-background">
+            <Button asChild variant="outline" size="sm" className="bg-transparent border-white/20 text-slate-200 hover:bg-white/10 hover:text-white">
                 <a href={OFFICIAL_STATEMENT_URL} download>
                 <Download className="mr-2 h-4 w-4" /> Official Letter
                 </a>

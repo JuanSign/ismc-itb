@@ -78,15 +78,23 @@ export function CustomFileInput({
           onClick={!disabled ? triggerClick : undefined}
           className={cn(
             "flex-1 flex items-center gap-3 px-3 py-2.5 border rounded-md transition-all relative group min-w-0",
-            disabled ? "opacity-50 cursor-not-allowed bg-muted" : "cursor-pointer hover:bg-accent/50 hover:border-primary/50 bg-background",
-            hasNewFile ? "border-blue-500/50 bg-blue-50/50" : "border-input",
-            hasSavedFile ? "border-emerald-500/30 bg-emerald-50/30" : ""
+            // Disabled State
+            disabled ? "opacity-50 cursor-not-allowed bg-white/5 border-white/5" : "cursor-pointer",
+            
+            // Default State (Dark)
+            !hasNewFile && !hasSavedFile && "bg-black/20 border-white/10 hover:bg-white/5 hover:border-white/20",
+
+            // New File State (Blue tint)
+            hasNewFile ? "border-blue-500/30 bg-blue-500/10" : "",
+
+            // Saved File State (Emerald tint)
+            hasSavedFile ? "border-emerald-500/30 bg-emerald-500/10" : ""
           )}
         >
             <div className={cn(
                 "h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
-                hasNewFile ? "bg-blue-100 text-blue-600" : 
-                hasSavedFile ? "bg-emerald-100 text-emerald-600" : "bg-muted text-muted-foreground"
+                hasNewFile ? "bg-blue-500/20 text-blue-400" : 
+                hasSavedFile ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-slate-400"
             )}>
                 {hasNewFile ? <UploadCloud className="h-4 w-4" /> : 
                  hasSavedFile ? <FileCheck className="h-4 w-4" /> : <UploadCloud className="h-4 w-4" />}
@@ -95,15 +103,15 @@ export function CustomFileInput({
             <div className="flex flex-col overflow-hidden min-w-0 flex-1">
                 <span className={cn(
                     "text-sm truncate font-medium", 
-                    hasNewFile ? "text-blue-700" : 
-                    hasSavedFile ? "text-emerald-700" : "text-muted-foreground"
+                    hasNewFile ? "text-blue-300" : 
+                    hasSavedFile ? "text-emerald-300" : "text-slate-300"
                 )}>
                     {fileName ? fileName : 
                      hasSavedFile ? "File Uploaded" : 
                      placeholder}
                 </span>
                 
-                <span className="text-xs text-muted-foreground/70 truncate">
+                <span className="text-xs text-slate-500 truncate">
                    {hasNewFile ? "Ready to save" : 
                     hasSavedFile ? "Click to replace" : 
                     `Max ${maxSizeMB}MB (${accept.replace(/\./g, "").toUpperCase()})`}
@@ -115,7 +123,7 @@ export function CustomFileInput({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive shrink-0"
+                className="h-8 w-8 rounded-full hover:bg-red-500/20 hover:text-red-400 text-slate-400 shrink-0"
                 onClick={handleClear}
               >
                 <X className="h-4 w-4" />
@@ -128,11 +136,11 @@ export function CustomFileInput({
              asChild 
              variant="outline" 
              size="icon" 
-             className="shrink-0 border-dashed" 
+             className="shrink-0 border-dashed border-white/20 bg-transparent text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/40" 
              title="View Current File"
             >
              <Link href={currentFileUrl} target="_blank">
-               <Eye className="h-4 w-4 text-muted-foreground" />
+               <Eye className="h-4 w-4" />
              </Link>
            </Button>
         )}

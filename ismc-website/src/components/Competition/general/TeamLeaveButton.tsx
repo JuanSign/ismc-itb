@@ -14,7 +14,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
 
 type Props = {
@@ -42,37 +41,39 @@ export function TeamLeaveButton({ action, title }: Props) {
     });
   };
 
-  const redButtonClasses = "bg-red-600 text-white hover:bg-red-700";
-
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
-          className="text-red-600 hover:text-red-700 hover:bg-red-50 gap-2"
+          className="text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-2"
           disabled={isPending}
         >
           <LogOut className="h-4 w-4" />
           Leave Team
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      
+      {/* Dark Glass Modal */}
+      <AlertDialogContent className="bg-slate-950 border-white/10 text-slate-100 shadow-xl">
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            You will be removed from this <strong>{title}</strong> team. 
+          <AlertDialogTitle className="text-white">Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription className="text-slate-400">
+            You will be removed from this <strong className="text-white">{title}</strong> team. 
             If you are the only member, the team might be disbanded.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending} className="border-white/10 bg-transparent text-slate-300 hover:bg-white/10 hover:text-white">
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault(); // Prevent auto-closing, let transition handle it
               handleLeave();
             }}
             disabled={isPending}
-            className={cn(redButtonClasses)}
+            className="bg-red-600 text-white hover:bg-red-700 border-none"
           >
             {isPending ? "Leaving..." : "Yes, Leave Team"}
           </AlertDialogAction>

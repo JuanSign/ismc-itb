@@ -21,23 +21,23 @@ type StatusConfig = {
 const statusMap: Record<number, StatusConfig> = {
   0: {
     icon: <Hourglass className="h-4 w-4" />,
-    className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
+    className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20 hover:bg-yellow-400/20",
   },
   1: {
     icon: <Hourglass className="h-4 w-4" />,
-    className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
+    className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20 hover:bg-yellow-400/20",
   },
   2: {
     icon: <Hourglass className="h-4 w-4" />,
-    className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
+    className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20 hover:bg-yellow-400/20",
   },
   3: {
     icon: <ListRestart className="h-4 w-4" />, 
-    className: "text-destructive bg-destructive/10 border-destructive/50 hover:bg-destructive/20",
+    className: "text-red-400 bg-red-400/10 border-red-400/20 hover:bg-red-400/20",
   },
   4: {
     icon: <CheckCircle2 className="h-4 w-4" />,
-    className: "text-emerald-600 bg-emerald-50 border-emerald-400 hover:bg-emerald-100",
+    className: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20 hover:bg-emerald-400/20",
   },
 };
 
@@ -67,7 +67,7 @@ export function TeamStatusBadge({
     >
       {finalStatus.icon}
       {hasNotes && (
-        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-white text-[10px] font-bold ring-2 ring-background">
+        <span className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-slate-950 shadow-sm">
           {notesCount}
         </span>
       )}
@@ -83,15 +83,17 @@ export function TeamStatusBadge({
       <PopoverTrigger asChild>
         {StatusIcon}
       </PopoverTrigger>
-      <PopoverContent className="w-80">
+      
+      {/* Dark Glass Popover */}
+      <PopoverContent className="w-80 bg-slate-950 border-white/10 text-slate-100 shadow-xl" align="end">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <ScrollText className="h-4 w-4 text-muted-foreground" />
-            <h4 className="font-medium leading-none">Admin Notes ({notesCount})</h4>
+          <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+            <ScrollText className="h-4 w-4 text-slate-400" />
+            <h4 className="font-medium leading-none text-white">Admin Notes ({notesCount})</h4>
           </div>
-          <ul className="list-disc space-y-2 pl-5 text-sm">
+          <ul className="list-disc space-y-2 pl-5 text-sm text-slate-300">
             {notesToDisplay.map((note, index) => (
-              <li key={index}>{note}</li>
+              <li key={index} className="pl-1">{note}</li>
             ))}
           </ul>
         </div>

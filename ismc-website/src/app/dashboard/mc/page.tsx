@@ -39,6 +39,9 @@ const getTeamStatusText = (status: number) => {
   }
 };
 
+// SHARED GLASS STYLE
+const GLASS_CARD = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
+
 export default async function TeamPage() {
   const { team, members, currentUserAccountId } = await getTeamPageData();
 
@@ -57,21 +60,21 @@ export default async function TeamPage() {
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
         
         {/* --- STEP 1: TEAM INFO --- */}
-        <Card className="border-l-4 border-l-blue-600 shadow-sm">
+        <Card className={`border-l-4 border-l-blue-500 ${GLASS_CARD}`}>
           <CardHeader>
             <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                        <Badge className="bg-blue-600 hover:bg-blue-700">STEP 1</Badge>
-                        <span className="text-sm font-medium text-muted-foreground">Team Verification</span>
+                        <Badge className="bg-blue-600 hover:bg-blue-500 text-white">STEP 1</Badge>
+                        <span className="text-sm font-medium text-slate-400">Team Verification</span>
                     </div>
-                    <CardTitle className="text-2xl truncate">{team.name}</CardTitle>
-                    <CardDescription className="mt-1 flex items-center gap-2 flex-wrap">
-                       Team Code: <span className="font-mono text-foreground font-bold bg-muted px-1.5 rounded">{team.code}</span>
+                    <CardTitle className="text-2xl truncate text-white">{team.name}</CardTitle>
+                    <CardDescription className="mt-1 flex items-center gap-2 flex-wrap text-slate-400">
+                       Team Code: <span className="font-mono text-yellow-400 font-bold bg-white/10 px-1.5 rounded border border-white/5">{team.code}</span>
                     </CardDescription>
                 </div>
                 <div className="flex flex-row md:flex-col items-center md:items-end gap-2 w-full md:w-auto justify-between md:justify-start">
-                    <div className="px-3 py-1 text-xs font-medium text-secondary-foreground border rounded-md bg-secondary/50 text-center">
+                    <div className="px-3 py-1 text-xs font-medium text-blue-200 border border-blue-500/30 rounded-md bg-blue-500/10 text-center">
                       {teamStatusText}
                     </div>
                     <TeamStatusBadge 
@@ -83,43 +86,43 @@ export default async function TeamPage() {
             </div>
           </CardHeader>
           
-          <Separator />
+          <Separator className="bg-white/10" />
 
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-semibold">
+                <h4 className="text-lg font-semibold text-white">
                 Members
                 </h4>
             </div>
             
             <div className="flex flex-col gap-3">
               {members.map((member) => (
-                <div key={member.account_id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors gap-3">
+                <div key={member.account_id} className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-colors gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Avatar className="shrink-0 h-10 w-10">
+                    <Avatar className="shrink-0 h-10 w-10 border border-white/10">
                       <AvatarImage src={member.fp_link || ""} alt={member.name || "Member"} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                      <AvatarFallback className="bg-slate-800 text-slate-200 text-xs">
                         {getInitials(member.name, member.email).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-sm flex items-center gap-1.5 flex-wrap">
+                      <div className="font-medium text-sm flex items-center gap-1.5 flex-wrap text-slate-200">
                         <span className="truncate block max-w-[120px] sm:max-w-[200px]">
                             {member.name || member.email}
                         </span>
                         
                         {member.account_id === currentUserAccountId && (
-                          <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 shrink-0">YOU</span>
+                          <span className="text-[10px] bg-blue-500/20 text-blue-300 font-bold px-1.5 py-0.5 rounded border border-blue-500/30 shrink-0">YOU</span>
                         )}
                         
                         {member.role === 'MANAGER' && (
-                            <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-100 px-1.5 py-0.5 rounded shrink-0">MANAGER</span>
+                            <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded shrink-0">MANAGER</span>
                         )}
                       </div>
 
                       {member.name && (
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="text-xs text-slate-400 truncate">
                           {member.email}
                         </p>
                       )}
@@ -138,7 +141,7 @@ export default async function TeamPage() {
             </div>
           </CardContent>
 
-          <Separator />
+          <Separator className="bg-white/10" />
 
           <CardFooter className="pt-6 flex justify-between items-center gap-4">
             <TeamLeaveButton 
@@ -163,7 +166,7 @@ export default async function TeamPage() {
               spVerified={team.sp_verified} 
               olVerified={team.ol_verified}
               step="STEP 2"
-              className="border-l-orange-500 shadow-sm" 
+              className="border-l-orange-500" 
             />
         )}
 
@@ -180,8 +183,8 @@ export default async function TeamPage() {
               paymentProofUrl={team.pp_link}
               ppVerified={team.pp_verified}
               step="STEP 3"
-              className="border-l-emerald-500" 
-              stepBadgeClassName="bg-emerald-600 hover:bg-emerald-700" 
+              className={`border-l-emerald-500 ${GLASS_CARD}`} 
+              stepBadgeClassName="bg-emerald-600 hover:bg-emerald-500 text-white" 
               paymentMethods={[
                   {
                     bankName: "BCA",
@@ -214,8 +217,8 @@ export default async function TeamPage() {
               assignmentLink={team.td_link}
               assignmentVerified={team.td_verified}
               step="STEP 4"
-              className="border-l-indigo-500 shadow-sm" 
-              stepBadgeClassName="bg-indigo-600 hover:bg-indigo-700"
+              className="border-l-indigo-500" 
+              stepBadgeClassName="bg-indigo-600 hover:bg-indigo-500 text-white"
             />
         )}
       </div>

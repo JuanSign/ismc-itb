@@ -80,9 +80,9 @@ export function FileUploaderField({
   const showActionRow = showViewButton || showUploadButton;
 
   return (
-    <div className="flex flex-col gap-3 p-5 border rounded-lg bg-card transition-all shadow-sm hover:border-primary/20">
+    <div className="flex flex-col gap-3 p-5 border rounded-lg bg-white/5 border-white/10 transition-all shadow-sm hover:border-white/20">
       <div className="flex justify-between items-center">
-         <Label htmlFor={name} className="text-base font-medium text-foreground">
+         <Label htmlFor={name} className="text-base font-medium text-slate-200">
            {label}
          </Label>
          {verificationBadge}
@@ -95,15 +95,25 @@ export function FileUploaderField({
             onClick={() => isInteractive && inputRef.current?.click()}
             className={cn(
                 "flex-1 flex items-center gap-3 px-3 py-2 border rounded-md transition-all relative group min-w-0",
-                isInteractive ? "cursor-pointer hover:bg-accent/50 hover:border-primary/50" : "opacity-50 cursor-not-allowed bg-muted",
-                hasNewFile ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-200" : "bg-background",
-                hasSavedFile && !hasNewFile ? "bg-emerald-50/30 border-emerald-200/50" : ""
+                
+                // Interactive States
+                isInteractive ? "cursor-pointer hover:bg-white/5" : "opacity-50 cursor-not-allowed bg-white/5",
+                
+                // Default State (Dark)
+                !hasNewFile && !hasSavedFile && "bg-black/20 border-white/10",
+
+                // New File State (Blue)
+                hasNewFile ? "bg-blue-500/10 border-blue-500/30" : "",
+
+                // Saved File State (Emerald)
+                hasSavedFile && !hasNewFile ? "bg-emerald-500/10 border-emerald-500/30" : ""
             )}
         >
             <div className={cn(
                 "h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
-                hasNewFile ? "bg-blue-100 text-blue-600" : 
-                hasSavedFile ? "bg-emerald-100 text-emerald-600" : "bg-muted text-muted-foreground"
+                hasNewFile ? "bg-blue-500/20 text-blue-400" : 
+                hasSavedFile ? "bg-emerald-500/20 text-emerald-400" : 
+                "bg-white/10 text-slate-400"
             )}>
                 {hasNewFile ? <UploadCloud className="h-4 w-4" /> : 
                  hasSavedFile ? <FileCheck className="h-4 w-4" /> : 
@@ -113,12 +123,12 @@ export function FileUploaderField({
             <div className="flex flex-col overflow-hidden min-w-0 flex-1">
                 <span className={cn(
                     "text-sm font-medium truncate", 
-                    hasNewFile ? "text-blue-700" : 
-                    hasSavedFile ? "text-emerald-700" : "text-muted-foreground"
+                    hasNewFile ? "text-blue-300" : 
+                    hasSavedFile ? "text-emerald-300" : "text-slate-300"
                 )}>
                     {fileName || (hasSavedFile ? "File Uploaded" : "Click to select file...")}
                 </span>
-                <span className="text-[10px] text-muted-foreground/70 truncate">
+                <span className="text-[10px] text-slate-500 truncate">
                     {hasNewFile ? "Ready to upload" : 
                      hasSavedFile ? "Click to replace" : 
                      `Max 1MB (${accept.replace(/\./g, "").toUpperCase()})`}
@@ -130,7 +140,7 @@ export function FileUploaderField({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive shrink-0 -mr-1"
+                className="h-8 w-8 rounded-full hover:bg-red-500/20 hover:text-red-400 text-slate-400 shrink-0 -mr-1"
                 onClick={handleClear}
               >
                 <X className="h-4 w-4" />
@@ -162,7 +172,7 @@ export function FileUploaderField({
                         variant="outline" 
                         size="icon" 
                         type="button"
-                        className="border-dashed text-muted-foreground hover:text-foreground shrink-0"
+                        className="border-dashed border-white/20 bg-transparent text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/40 shrink-0"
                         title="View uploaded file"
                     >
                         <Link href={currentFileUrl} target="_blank">
@@ -175,7 +185,7 @@ export function FileUploaderField({
                     <Button 
                         type="submit" 
                         disabled={isPending}
-                        className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-24"
+                        className="bg-blue-600 hover:bg-blue-500 text-white w-full sm:w-24 border-none"
                     >
                         {isPending ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
