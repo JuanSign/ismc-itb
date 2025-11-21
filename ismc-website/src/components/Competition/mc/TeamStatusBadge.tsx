@@ -6,58 +6,59 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   Hourglass,
-  XCircle,
   CheckCircle2,
+  ListRestart,
   ScrollText,
   Info,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 type StatusConfig = {
   icon: React.ReactNode;
   className: string;
-  label: string;
 };
 
 const statusMap: Record<number, StatusConfig> = {
   0: {
     icon: <Hourglass className="h-4 w-4" />,
-    label: "Pending",
-    className:
-      "text-yellow-600 bg-yellow-50 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300",
+    className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
   },
   1: {
-    icon: <XCircle className="h-4 w-4" />,
-    label: "Rejected",
-    className:
-      "text-destructive bg-destructive/10 border-destructive/20 hover:bg-destructive/20 hover:border-destructive/40",
+    icon: <Hourglass className="h-4 w-4" />,
+    className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
   },
   2: {
+    icon: <Hourglass className="h-4 w-4" />,
+    className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
+  },
+  3: {
+    icon: <ListRestart className="h-4 w-4" />, 
+    className: "text-destructive bg-destructive/10 border-destructive/50 hover:bg-destructive/20",
+  },
+  4: {
     icon: <CheckCircle2 className="h-4 w-4" />,
-    label: "Approved",
-    className:
-      "text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300",
+    className: "text-emerald-600 bg-emerald-50 border-emerald-400 hover:bg-emerald-100",
   },
 };
 
-export function MemberStatusBadge({
+export function TeamStatusBadge({
+  statusText,
   status,
   notes,
 }: {
+  statusText: string;
   status: number | null;
   notes: string[] | null;
 }) {
-  const finalStatus = statusMap[status || 0];
+  const finalStatus = statusMap[status || 0] || statusMap[0];
   
   const rawNotes = notes || [];
-  const notesToDisplay = rawNotes.length > 0 
-    ? rawNotes 
-    : ["No specific notes provided. Contact admin for details."];
-    
   const notesCount = rawNotes.length;
   const hasNotes = notesCount > 0;
+
+  const notesToDisplay = hasNotes ? rawNotes : ["No details provided."];
 
   const StatusIcon = (
     <Button
@@ -94,7 +95,7 @@ export function MemberStatusBadge({
           <div className="flex flex-col">
             <h4 className="text-sm font-semibold leading-none">Admin Notes</h4>
             <p className="text-xs text-muted-foreground mt-1">
-              {finalStatus.label} status details
+              Status: {statusText}
             </p>
           </div>
         </div>
@@ -114,10 +115,11 @@ export function MemberStatusBadge({
             ))}
           </div>
         </div>
-        
-        <div className="bg-muted/30 p-2 border-t text-center">
+
+         {/* Footer Section */}
+         <div className="bg-muted/30 p-2 border-t text-center">
            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-             Total: {notesCount} {notesCount === 1 ? 'Note' : 'Notes'}
+             {notesCount} {notesCount === 1 ? 'Message' : 'Messages'}
            </span>
         </div>
       </PopoverContent>

@@ -10,7 +10,7 @@ import { PaymentSection } from "@/components/Competition/general/PaymentSection"
 import { Separator } from "@/components/ui/separator";
 import { TeamLeaveButton } from "@/components/Competition/general/TeamLeaveButton";
 import { TeamMemberDialog } from "@/components/Competition/mc/TeamMemberDialog";
-import { TeamStatusBadge } from "@/components/Competition/general/TeamStatusBadge";
+import { TeamStatusBadge } from "@/components/Competition/mc/TeamStatusBadge";
 
 // Actions
 import { updateBilling } from "@/actions/server/hackathon";
@@ -75,6 +75,7 @@ export default async function TeamPage() {
                       {teamStatusText}
                     </div>
                     <TeamStatusBadge 
+                      statusText={getTeamStatusText(teamStatus)}
                       status={teamStatus} 
                       notes={team.notes} 
                     />
