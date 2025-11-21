@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { uploadTeamDocuments } from "@/actions/server/mc";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,10 +34,10 @@ function VerificationBadge({ status }: { status: number | null }) {
   );
 }
 
-const PARTICIPANT_STATEMENT_URL = "/files/templates/statement-of-participants.pdf";
-const OFFICIAL_STATEMENT_URL = "/files/templates/official-statement.pdf";
+const PARTICIPANT_STATEMENT_URL = `${process.env.NEXT_PUBLIC_CDN_URL}/mc/participant_statement.docx`;
+const OFFICIAL_STATEMENT_URL = `${process.env.NEXT_PUBLIC_CDN_URL}/mc/official_statement.docx`;
 
-export function DocumentsSection({
+export function CoreDocumentsSection({
   spLink,
   olLink,
   spVerified,
@@ -57,8 +56,8 @@ export function DocumentsSection({
     <Card className={cn("border-l-4", className)}> 
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline" className="bg-background">{step}</Badge>
-            <span className="text-sm font-medium text-muted-foreground">Required Documents</span>
+          <Badge className="bg-orange-500 hover:bg-orange-600">{step}</Badge>
+          <span className="text-sm font-medium text-muted-foreground">Core Documents</span>
         </div>
         <CardTitle>Uploading Core Documents</CardTitle>
         <CardDescription>
@@ -73,12 +72,12 @@ export function DocumentsSection({
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="outline" size="sm" className="bg-background">
                 <a href={PARTICIPANT_STATEMENT_URL} download>
-                <Download className="mr-2 h-4 w-4" /> Statement of Participants (SP)
+                <Download className="mr-2 h-4 w-4" /> Statement of Participants
                 </a>
             </Button>
             <Button asChild variant="outline" size="sm" className="bg-background">
                 <a href={OFFICIAL_STATEMENT_URL} download>
-                <Download className="mr-2 h-4 w-4" /> Official Letter (OL)
+                <Download className="mr-2 h-4 w-4" /> Official Letter
                 </a>
             </Button>
           </div>
@@ -88,7 +87,7 @@ export function DocumentsSection({
         <div className="flex flex-col gap-4">
           <FileUploaderField
             name="doc_statement_participants"
-            label="Statement of Participants (SP)"
+            label="Statement of Participants"
             accept=".pdf"
             currentFileUrl={spLink}
             verificationBadge={<VerificationBadge status={spVerified} />}
@@ -97,7 +96,7 @@ export function DocumentsSection({
           
           <FileUploaderField
             name="doc_official_statement"
-            label="Official Letter (OL)"
+            label="Official Letter"
             accept=".pdf"
             currentFileUrl={olLink}
             verificationBadge={<VerificationBadge status={olVerified} />}

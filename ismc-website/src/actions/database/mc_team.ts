@@ -112,3 +112,13 @@ export async function updateHealthDocs(teamId: string, hdKey: string | null) {
         WHERE team_id = ${teamId}
     `;
 }
+
+export async function updateAssignmentDocs(teamId: string, adKey: string | null) {
+    await DB`
+        UPDATE mc_team 
+        SET 
+            td_link = COALESCE(${adKey}::text, td_link),
+            td_verified = CASE WHEN ${adKey}::text IS NOT NULL THEN 0 ELSE td_verified END
+        WHERE team_id = ${teamId}
+    `;
+}

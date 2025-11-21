@@ -13,6 +13,8 @@ import {
   ListRestart,
   ScrollText,
   Info,
+  BookText,
+  CreditCard,
 } from "lucide-react";
 
 type StatusConfig = {
@@ -26,11 +28,11 @@ const statusMap: Record<number, StatusConfig> = {
     className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
   },
   1: {
-    icon: <Hourglass className="h-4 w-4" />,
+    icon: < BookText className="h-4 w-4" />,
     className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
   },
   2: {
-    icon: <Hourglass className="h-4 w-4" />,
+    icon: <CreditCard className="h-4 w-4" />,
     className: "text-yellow-600 bg-yellow-50 border-yellow-300 hover:bg-yellow-100",
   },
   3: {

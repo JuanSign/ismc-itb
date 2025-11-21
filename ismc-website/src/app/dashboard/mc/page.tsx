@@ -2,8 +2,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { DocumentsSection } from "@/components/Competition/mc/DocumentSection";
-import { HealthDocsSection } from "@/components/Competition/mc/HealthDocsSection";
+import { CoreDocumentsSection } from "@/components/Competition/mc/CoreDocumentSection";
+import { TeamDocumentSection } from "@/components/Competition/mc/TeamDocumentSection";
 import { LockedStep } from "@/components/LockedSection/LockedStep";
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
 import { PaymentSection } from "@/components/Competition/general/PaymentSection";
@@ -13,7 +13,7 @@ import { TeamMemberDialog } from "@/components/Competition/mc/TeamMemberDialog";
 import { TeamStatusBadge } from "@/components/Competition/mc/TeamStatusBadge";
 
 // Actions
-import { updateBilling } from "@/actions/server/hackathon";
+import { updateBilling } from "@/actions/server/mc";
 import { getTeamPageData, leaveTeam } from "@/actions/server/mc";
 
 // --- Helper: Initials ---
@@ -50,7 +50,7 @@ export default async function TeamPage() {
 
   const isDocsLocked = teamStatus < 1; 
   const isPaymentLocked = teamStatus < 2; 
-  const isHealthDocsLocked = teamStatus < 3; 
+  const isTeamDocsLocked = teamStatus < 3; 
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -157,7 +157,7 @@ export default async function TeamPage() {
               borderColorClass="border-l-orange-500"
             />
         ) : (
-            <DocumentsSection 
+            <CoreDocumentsSection 
               spLink={team.sp_link}
               olLink={team.ol_link}
               spVerified={team.sp_verified} 
@@ -180,16 +180,26 @@ export default async function TeamPage() {
               paymentProofUrl={team.pp_link}
               ppVerified={team.pp_verified}
               step="STEP 3"
-              className="border-l-emerald-500 shadow-sm" 
-              bankName="BCA"
-              accountHolder="ISMC XV"
-              accountNumber="1234567890"
-              price="100.000"
+              className="border-l-emerald-500" 
+              stepBadgeClassName="bg-emerald-600 hover:bg-emerald-700" 
+              paymentMethods={[
+                  {
+                    bankName: "BCA",
+                    accountNumber: "4490380731",
+                    accountHolder: "Dippo Haryo Satriyo Ditho"
+                  },
+                  {
+                    bankName: "Mandiri",
+                    accountNumber: "1610015784197",
+                    accountHolder: "Rihhadatul Aisy"
+                  }
+                ]}
+              price="Rp7.500.000"
               uploadAction={updateBilling}
             />
         )}
         
-        {isHealthDocsLocked ? (
+        {isTeamDocsLocked ? (
             <LockedStep
               step="STEP 4"
               title="Health Docs"
@@ -198,11 +208,14 @@ export default async function TeamPage() {
               borderColorClass="border-l-indigo-500"
             />
         ) : (
-            <HealthDocsSection 
-              hdLink={team.hd_link}
-              hdVerified={team.hd_verified}
+            <TeamDocumentSection 
+              healthLink={team.hd_link}
+              healthVerified={team.hd_verified}
+              assignmentLink={team.td_link}
+              assignmentVerified={team.td_verified}
               step="STEP 4"
               className="border-l-indigo-500 shadow-sm" 
+              stepBadgeClassName="bg-indigo-600 hover:bg-indigo-700"
             />
         )}
       </div>

@@ -7,14 +7,16 @@ export type TeamMC = {
   status: number;
   count: number;
   notes: string[] | null;
-  pp_link: string | null;
-  pp_verified: number;
-  hd_link: string | null;
-  hd_verified: number;
   sp_link: string | null; 
   sp_verified: number;
   ol_link: string | null;
   ol_verified: number;
+  pp_link: string | null;
+  pp_verified: number;
+  hd_link: string | null;
+  hd_verified: number;
+  td_link: string | null;
+  td_verified: number;
 }
 
 export type MedicalInfo = { 

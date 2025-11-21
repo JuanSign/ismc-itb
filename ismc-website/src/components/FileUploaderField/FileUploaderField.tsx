@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, UploadCloud, Check, X } from "lucide-react";
+import { Loader2, UploadCloud, X, FileCheck, Eye } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -43,13 +43,24 @@ export function FileUploaderField({
     if (state.message) {
       toast.success(state.message);
       formRef.current?.reset();
-      // Wrap state update to prevent sync-render error
       setTimeout(() => setFileName(null), 0);
     }
   }, [state]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFileName(e.target.files?.[0]?.name || null);
+    const file = e.target.files?.[0];
+    if (file) {
+        const maxSize = 1 * 1024 * 1024; 
+        if (file.size > maxSize) {
+            toast.error("File is too large. Max size is 1MB.");
+            e.target.value = "";
+            setFileName(null);
+            return;
+        }
+        setFileName(file.name);
+    } else {
+        setFileName(null);
+    }
   };
 
   const handleClear = (e: React.MouseEvent) => {
@@ -60,49 +71,61 @@ export function FileUploaderField({
     }
   };
 
+  const hasNewFile = !!fileName;
+  const hasSavedFile = !!currentFileUrl && !hasNewFile;
+  const isInteractive = !disabled && !isPending;
+
+  const showViewButton = !!currentFileUrl;
+  const showUploadButton = hasNewFile;
+  const showActionRow = showViewButton || showUploadButton;
+
   return (
-    <div className="flex flex-col gap-3 p-5 border rounded-lg bg-card hover:border-primary/20 transition-colors shadow-sm">
-      <div className="flex justify-between items-start">
-        <div className="flex flex-col gap-1">
-            <Label htmlFor={name} className="text-base font-medium text-foreground">
-            {label}
-            </Label>
-            {currentFileUrl ? (
-                <Link href={currentFileUrl} target="_blank" className="text-xs text-blue-600 hover:underline font-medium flex items-center gap-1">
-                    View Current File
-                </Link>
-            ) : (
-                <span className="text-xs text-muted-foreground">No file currently uploaded.</span>
-            )}
-        </div>
-        {verificationBadge}
+    <div className="flex flex-col gap-3 p-5 border rounded-lg bg-card transition-all shadow-sm hover:border-primary/20">
+      <div className="flex justify-between items-center">
+         <Label htmlFor={name} className="text-base font-medium text-foreground">
+           {label}
+         </Label>
+         {verificationBadge}
       </div>
 
-      <form ref={formRef} action={action} className="flex flex-col sm:flex-row gap-3 items-stretch mt-2">
-        {/* Custom File Input UI */}
+      <form ref={formRef} action={action} className="flex flex-col sm:flex-row gap-3 items-stretch mt-1">
+        
+        {/* 1. File Selection Trigger */}
         <div 
-            onClick={() => !disabled && !isPending && inputRef.current?.click()}
+            onClick={() => isInteractive && inputRef.current?.click()}
             className={cn(
-                "flex-1 flex items-center gap-3 px-3 py-2 border rounded-md transition-all cursor-pointer relative group",
-                fileName ? "bg-blue-50 border-blue-200" : "bg-background hover:bg-accent",
-                (disabled || isPending) && "opacity-50 cursor-not-allowed"
+                "flex-1 flex items-center gap-3 px-3 py-2 border rounded-md transition-all relative group min-w-0",
+                isInteractive ? "cursor-pointer hover:bg-accent/50 hover:border-primary/50" : "opacity-50 cursor-not-allowed bg-muted",
+                hasNewFile ? "bg-blue-50/50 border-blue-200 ring-1 ring-blue-200" : "bg-background",
+                hasSavedFile && !hasNewFile ? "bg-emerald-50/30 border-emerald-200/50" : ""
             )}
         >
             <div className={cn(
-                "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-                fileName ? "bg-blue-100 text-blue-600" : "bg-muted text-muted-foreground"
+                "h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                hasNewFile ? "bg-blue-100 text-blue-600" : 
+                hasSavedFile ? "bg-emerald-100 text-emerald-600" : "bg-muted text-muted-foreground"
             )}>
-                {fileName ? <Check className="h-4 w-4" /> : <UploadCloud className="h-4 w-4" />}
-            </div>
-            <div className="flex flex-col overflow-hidden min-w-0 flex-1">
-                <span className={cn("text-sm font-medium truncate", fileName ? "text-blue-900" : "text-muted-foreground")}>
-                    {fileName || "Click to select file..."}
-                </span>
-                {!fileName && <span className="text-[10px] text-muted-foreground/70">Max 1MB</span>}
+                {hasNewFile ? <UploadCloud className="h-4 w-4" /> : 
+                 hasSavedFile ? <FileCheck className="h-4 w-4" /> : 
+                 <UploadCloud className="h-4 w-4" />}
             </div>
 
-             {/* Clear Button - Flex item now */}
-             {fileName && !disabled && !isPending && (
+            <div className="flex flex-col overflow-hidden min-w-0 flex-1">
+                <span className={cn(
+                    "text-sm font-medium truncate", 
+                    hasNewFile ? "text-blue-700" : 
+                    hasSavedFile ? "text-emerald-700" : "text-muted-foreground"
+                )}>
+                    {fileName || (hasSavedFile ? "File Uploaded" : "Click to select file...")}
+                </span>
+                <span className="text-[10px] text-muted-foreground/70 truncate">
+                    {hasNewFile ? "Ready to upload" : 
+                     hasSavedFile ? "Click to replace" : 
+                     `Max 1MB (${accept.replace(/\./g, "").toUpperCase()})`}
+                </span>
+            </div>
+
+             {hasNewFile && isInteractive && (
               <Button
                 type="button"
                 variant="ghost"
@@ -115,30 +138,54 @@ export function FileUploaderField({
             )}
         </div>
 
-        {/* Hidden Real Input */}
         <Input
           ref={inputRef}
           id={name}
           name={name}
           type="file"
           accept={accept}
-          disabled={disabled || isPending}
+          disabled={!isInteractive}
           onChange={handleFileChange}
           className="hidden"
         />
 
-        {/* Submit Button */}
-        <Button 
-          type="submit" 
-          disabled={disabled || isPending || !fileName}
-          className="bg-blue-600 hover:bg-blue-700 text-white shrink-0"
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            "Upload"
-          )}
-        </Button>
+        {/* 2. Action Buttons - STRICTLY CONDITIONAL */}
+        {showActionRow && (
+            <div className={cn(
+                "flex items-center gap-2 shrink-0", 
+                showUploadButton ? "w-full sm:w-auto" : "w-auto"
+            )}>
+                
+                {showViewButton && (
+                    <Button 
+                        asChild 
+                        variant="outline" 
+                        size="icon" 
+                        type="button"
+                        className="border-dashed text-muted-foreground hover:text-foreground shrink-0"
+                        title="View uploaded file"
+                    >
+                        <Link href={currentFileUrl} target="_blank">
+                            <Eye className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                )}
+
+                {showUploadButton && (
+                    <Button 
+                        type="submit" 
+                        disabled={isPending}
+                        className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-24"
+                    >
+                        {isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            "Upload"
+                        )}
+                    </Button>
+                )}
+            </div>
+        )}
       </form>
     </div>
   );

@@ -11,7 +11,8 @@ import { DB } from "@/lib/DB";
 import { 
     checkTeamNameExists, insertNewTeam, addMemberToTeam, 
     deleteMember, fetchTeamPageData, getTeamId, 
-    updatePayment, updateTeamDocs, updateHealthDocs 
+    updatePayment, updateTeamDocs, updateHealthDocs, 
+    updateAssignmentDocs
 } from "@/actions/database/mc_team";
 import { updateMember } from "@/actions/database/mc_member";
 import { addEventToAccount, removeEventFromAccount } from "@/actions/database/account";
@@ -247,8 +248,8 @@ export async function uploadTeamDocuments(
 
         if ((!spFile || spFile.size === 0) && (!olFile || olFile.size === 0)) return { error: "Please upload at least one document." };
 
-        const spKey = (spFile && spFile.size > 0) ? await uploadFileToR2(spFile, "team-sp", account_id) : null;
-        const olKey = (olFile && olFile.size > 0) ? await uploadFileToR2(olFile, "team-ol", account_id) : null;
+        const spKey = (spFile && spFile.size > 0) ? await uploadFileToR2(spFile, "mc-sp", account_id) : null;
+        const olKey = (olFile && olFile.size > 0) ? await uploadFileToR2(olFile, "mc-ol", account_id) : null;
 
         const team_id = await getTeamId(account_id);
         if (!team_id) return { error: "You are not on a team." };
@@ -259,7 +260,7 @@ export async function uploadTeamDocuments(
     } catch { return { error: "Error uploading documents." }; }
 }
 
-export async function uploadHealthDocuments(
+export async function uploadHealthDocument(
     prevState: UploadHealthDocsFormState,
     formData: FormData
 ): Promise<UploadHealthDocsFormState> {
@@ -268,15 +269,35 @@ export async function uploadHealthDocuments(
     const { account_id } = session;
 
     try {
-        const hdFile = formData.get("doc_health") as File;
+        const hdFile = formData.get("doc_health_statement") as File;
         if (!hdFile || hdFile.size === 0) return { error: "Please select a file." };
-        const hdKey = await uploadFileToR2(hdFile, "team-hd", account_id);
+        const hdKey = await uploadFileToR2(hdFile, "mc-hd", account_id);
         const team_id = await getTeamId(account_id);
         if (!team_id) return { error: "You are not on a team." };
         await updateHealthDocs(team_id, hdKey);
         revalidatePath("/dashboard/mc/team");
         return { message: "Health Docs uploaded successfully." };
     } catch { return { error: "Error uploading health docs." }; }
+}
+
+export async function uploadAssignmentDocument(
+    prevState: UploadHealthDocsFormState,
+    formData: FormData
+): Promise<UploadHealthDocsFormState> {
+    const session = await verifySession();
+    if (!session) return { error: "Not authenticated." };
+    const { account_id } = session;
+
+    try {
+        const adFile = formData.get("doc_team_assignment") as File;
+        if (!adFile || adFile.size === 0) return { error: "Please select a file." };
+        const adKey = await uploadFileToR2(adFile, "mc-ad", account_id);
+        const team_id = await getTeamId(account_id);
+        if (!team_id) return { error: "You are not on a team." };
+        await updateAssignmentDocs(team_id, adKey);
+        revalidatePath("/dashboard/mc/team");
+        return { message: "Assigment Docs uploaded successfully." };
+    } catch { return { error: "Error uploading assignment docs." }; }
 }
 
 export async function updateBilling(
@@ -290,7 +311,7 @@ export async function updateBilling(
     try {
         const ppFile = formData.get("payment_proof_url") as File;
         if (!ppFile || ppFile.size === 0) return { error: "Please select a file." };
-        const ppKey = await uploadFileToR2(ppFile, "team-pp", account_id);
+        const ppKey = await uploadFileToR2(ppFile, "mc-pp", account_id);
         const team_id = await getTeamId(account_id);
         if (!team_id) return { error: "You are not on a team." };
         await updatePayment(team_id, ppKey);

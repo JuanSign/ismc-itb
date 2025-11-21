@@ -131,15 +131,25 @@ export default async function PaperTeamPage() {
             />
         ) : (
             <PaymentSection 
-                paymentProofUrl={team.pp_link} 
-                ppVerified={team.pp_verified} 
-                step="STEP 2" 
-                className="border-l-emerald-500 shadow-sm" 
-                bankName="Bank Mandiri" 
-                accountNumber="13100100100" 
-                accountHolder="Paper Committee" 
-                price="IDR 120,000" 
-                uploadAction={updateBilling} 
+              paymentProofUrl={team.pp_link}
+              ppVerified={team.pp_verified}
+              step="STEP 3"
+              className="border-l-emerald-500" 
+              stepBadgeClassName="bg-emerald-600 hover:bg-emerald-700" 
+              paymentMethods={[
+                  {
+                    bankName: "BCA",
+                    accountNumber: "4490380731",
+                    accountHolder: "Dippo Haryo Satriyo Ditho"
+                  },
+                  {
+                    bankName: "Mandiri",
+                    accountNumber: "1610015784197",
+                    accountHolder: "Rihhadatul Aisy"
+                  }
+                ]}
+              price="Rp7.500.000"
+              uploadAction={updateBilling}
             />
         )}
 
