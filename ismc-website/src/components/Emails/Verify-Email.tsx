@@ -16,7 +16,7 @@ interface VerifyEmailProps {
   confirmLink: string;
 }
 
-const FOOTER_URL = `${process.env.NEXT_PUBLIC_CDN_URL}/email/footer.jpg`;
+const FOOTER_URL = `${process.env.NEXT_PUBLIC_CDN_URL}/email/footer.JPG`;
 
 export const VerifyEmailTemplate = ({ confirmLink }: VerifyEmailProps) => (
   <Html>

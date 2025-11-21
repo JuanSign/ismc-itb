@@ -28,6 +28,7 @@ type Props = {
 };
 
 const initialState: ActionState = { error: "" };
+const PRIMARY_BTN = "bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-semibold";
 
 export function PersonalEntry({ 
   title, 
@@ -44,7 +45,7 @@ export function PersonalEntry({
 
   if (hasJoined) {
     return (
-      <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+      <Button asChild className={PRIMARY_BTN}>
         <Link href={redirectPath}>Enter Competition</Link>
       </Button>
     );
@@ -53,19 +54,23 @@ export function PersonalEntry({
   return (
     <AlertDialog>
         <AlertDialogTrigger asChild>
-             <Button className="bg-blue-600 hover:bg-blue-700 text-white">Enter Competition</Button>
+             <Button className={PRIMARY_BTN}>Enter Competition</Button>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        
+        {/* DARK GLASS ALERT DIALOG */}
+        <AlertDialogContent className="bg-slate-950 border-white/10 text-slate-100 shadow-2xl">
             <AlertDialogHeader>
-                <AlertDialogTitle>Join {title}</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogTitle className="text-white">Join {title}</AlertDialogTitle>
+                <AlertDialogDescription className="text-slate-400">
                     {description}
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="bg-transparent border-white/10 text-slate-300 hover:bg-white/10 hover:text-white">
+                  Cancel
+                </AlertDialogCancel>
                 <form action={formAction}>
-                    <AlertDialogAction type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={isPending}>
+                    <AlertDialogAction type="submit" className={PRIMARY_BTN} disabled={isPending}>
                         {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Joining...</> : "Continue"}
                     </AlertDialogAction>
                 </form>

@@ -39,6 +39,8 @@ export default async function CompetitionPage() {
 
   const lockMessage = "You must choose between Mining Competition or Mining Insight.";
 
+  const glassCardClass = "bg-slate-950/70 backdrop-blur-md border-white/10 text-slate-100 shadow-2xl";
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <Toaster richColors/>
@@ -50,39 +52,42 @@ export default async function CompetitionPage() {
              title="Mining Competition"
              description="A competition for a team of seven members and one manager."
              subtext={`${lockMessage} You have already joined a Mining Insight competition.`}
-             borderColorClass="border-l-primary"
+             borderColorClass="border-l-blue-500"
            />
         ) : (
-          <Card className="border-primary/20 shadow-md">
+          <Card className={glassCardClass}>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Pickaxe className="h-6 w-6 text-primary" />
+                {/* Icon container: semi-transparent white */}
+                <div className="p-2 bg-white/10 rounded-lg border border-white/5">
+                  <Pickaxe className="h-6 w-6 text-blue-400" />
                 </div>
                 <div>
-                  <CardTitle>Mining Competition</CardTitle>
-                  <CardDescription>The Main Event</CardDescription>
+                  <CardTitle className="text-white text-xl tracking-wide">Mining Competition</CardTitle>
+                  <CardDescription className="text-slate-300">The Main Event</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-slate-300 leading-relaxed">
                 A competition for a team of seven members and one manager. Teams
                 will compete in a series of mining-related challenges, ranging
                 from orienteering to written tests.
               </p>
             </CardContent>
             <CardFooter className="flex gap-3 justify-end">
-              <Button variant="outline" asChild>
+              <Button variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
                 <Link href="/dashboard/mc/details">Show More</Link>
               </Button>
-              <CompetitionEntry 
-                title="Mining Competition"
-                hasJoined={hasJoinedMC}
-                redirectPath="/dashboard/mc"
-                createAction={createMC}
-                joinAction={joinMC}
-              />
+              <div className="brightness-110">
+                <CompetitionEntry 
+                  title="Mining Competition"
+                  hasJoined={hasJoinedMC}
+                  redirectPath="/dashboard/mc"
+                  createAction={createMC}
+                  joinAction={joinMC}
+                />
+              </div>
             </CardFooter>
           </Card>
         )}
@@ -93,18 +98,18 @@ export default async function CompetitionPage() {
              title="Mining Insight"
              description="A broader competition open to participants beyond the mining field."
              subtext={`${lockMessage} You have already joined the Mining Competition.`}
-             borderColorClass="border-l-yellow-600"
+             borderColorClass="border-l-yellow-500"
            />
         ) : (
-          <Card>
+          <Card className={glassCardClass}>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-500/10 rounded-lg">
-                  <Lightbulb className="h-6 w-6 text-yellow-600" />
+                <div className="p-2 bg-white/10 rounded-lg border border-white/5">
+                  <Lightbulb className="h-6 w-6 text-yellow-400" />
                 </div>
                 <div>
-                  <CardTitle>Mining Insight</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-white text-xl tracking-wide">Mining Insight</CardTitle>
+                  <CardDescription className="text-slate-300">
                       A broader competition open to participants beyond the mining field.
                   </CardDescription>
                 </div>
@@ -112,118 +117,124 @@ export default async function CompetitionPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               
-              <Accordion type="single" collapsible className="w-full">
+              <Accordion type="single" collapsible className="w-full border-white/10">
                 
                 {/* A. PAPER COMPETITION */}
-                <AccordionItem value="item-1">
-                  <AccordionTrigger className="hover:no-underline py-4">
+                <AccordionItem value="item-1" className="border-white/10">
+                  <AccordionTrigger className="hover:no-underline hover:bg-white/5 px-3 py-4 rounded-md transition-all data-[state=open]:bg-white/5">
                       <div className="flex items-center gap-3">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span>Paper Competition</span>
+                          <FileText className="h-5 w-5 text-blue-300" />
+                          <span className="text-slate-100">Paper Competition</span>
                       </div>
                   </AccordionTrigger>
-                  <AccordionContent className="flex flex-col gap-4 px-1 pb-6">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                  <AccordionContent className="flex flex-col gap-4 px-3 pb-6 pt-4">
+                    <p className="text-sm text-slate-300 leading-relaxed">
                       Scientific writing competition combining business cases with academic mining studies.
                     </p>
-                    <p className="text-sm font-medium">Open to teams of 1-3 participants.</p>
+                    <p className="text-sm font-medium text-yellow-400">Open to teams of 1-3 participants.</p>
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" asChild>
+                      <Button size="sm" variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
                           <Link href="/dashboard/paper/details">Show More</Link>
                       </Button>
-                      <CompetitionEntry 
-                        title="Paper Competition"
-                        hasJoined={hasJoinedPaper}
-                        redirectPath="/dashboard/competition/paper/team"
-                        createAction={createPaper}
-                        joinAction={joinPaper}
-                        teamNamePlaceholder="e.g. Innovation Squad"
-                      />
+                      <div className="brightness-110">
+                        <CompetitionEntry 
+                            title="Paper Competition"
+                            hasJoined={hasJoinedPaper}
+                            redirectPath="/dashboard/competition/paper/team"
+                            createAction={createPaper}
+                            joinAction={joinPaper}
+                            teamNamePlaceholder="e.g. Innovation Squad"
+                        />
+                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
 
                 {/* B. HACKATHON */}
-                <AccordionItem value="item-2">
-                  <AccordionTrigger className="hover:no-underline py-4">
+                <AccordionItem value="item-2" className="border-white/10">
+                  <AccordionTrigger className="hover:no-underline hover:bg-white/5 px-3 py-4 rounded-md transition-all data-[state=open]:bg-white/5">
                       <div className="flex items-center gap-3">
-                          <Cpu className="h-4 w-4 text-muted-foreground" />
-                          <span>Hackathon</span>
+                          <Cpu className="h-5 w-5 text-purple-300" />
+                          <span className="text-slate-100">Hackathon</span>
                       </div>
                   </AccordionTrigger>
-                  <AccordionContent className="flex flex-col gap-4 px-1 pb-6">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                  <AccordionContent className="flex flex-col gap-4 px-3 pb-6 pt-4">
+                    <p className="text-sm text-slate-300 leading-relaxed">
                       Innovation-based team competition using Industry 4.0 technology to solve real-world mining problems.
                     </p>
-                    <p className="text-sm font-medium">Open to teams of 3-5 participants.</p>
+                    <p className="text-sm font-medium text-yellow-400">Open to teams of 3-5 participants.</p>
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" asChild>
+                      <Button size="sm" variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
                           <Link href="/dashboard/hackathon/details">Show More</Link>
                       </Button>
-                      <CompetitionEntry 
-                        title="Hackathon"
-                        hasJoined={hasJoinedHack}
-                        redirectPath="/dashboard/competition/hackathon/team"
-                        createAction={createHack}
-                        joinAction={joinHack}
-                        teamNamePlaceholder="e.g. Tech Miners"
-                      />
+                      <div className="brightness-110">
+                        <CompetitionEntry 
+                            title="Hackathon"
+                            hasJoined={hasJoinedHack}
+                            redirectPath="/dashboard/competition/hackathon/team"
+                            createAction={createHack}
+                            joinAction={joinHack}
+                            teamNamePlaceholder="e.g. Tech Miners"
+                        />
+                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
 
                 {/* C. POSTER COMPETITION */}
-                <AccordionItem value="item-3">
-                  <AccordionTrigger className="hover:no-underline py-4">
+                <AccordionItem value="item-3" className="border-white/10">
+                  <AccordionTrigger className="hover:no-underline hover:bg-white/5 px-3 py-4 rounded-md transition-all data-[state=open]:bg-white/5">
                       <div className="flex items-center gap-3">
-                          <Presentation className="h-4 w-4 text-muted-foreground" />
-                          <span>Poster Competition</span>
+                          <Presentation className="h-5 w-5 text-teal-300" />
+                          <span className="text-slate-100">Poster Competition</span>
                       </div>
                   </AccordionTrigger>
-                  <AccordionContent className="flex flex-col gap-4 px-1 pb-6">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                  <AccordionContent className="flex flex-col gap-4 px-3 pb-6 pt-4">
+                    <p className="text-sm text-slate-300 leading-relaxed">
                       Visually communicate complex engineering concepts through creative design.
                     </p>
-                    <p className="text-sm font-medium">Individual Competition (1 Participant).</p>
+                    <p className="text-sm font-medium text-yellow-400">Individual Competition (1 Participant).</p>
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" asChild>
+                      <Button size="sm" variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
                           <Link href="/dashboard/poster/details">Show More</Link>
                       </Button>
-                      
-                      <PersonalEntry 
-                        title="Poster Competition"
-                        action={registerPoster}
-                        hasJoined={hasJoinedPoster}
-                        redirectPath="/dashboard/competition/poster"
-                      />
+                      <div className="brightness-110">
+                        <PersonalEntry 
+                            title="Poster Competition"
+                            action={registerPoster}
+                            hasJoined={hasJoinedPoster}
+                            redirectPath="/dashboard/competition/poster"
+                        />
+                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
 
                 {/* D. PHOTO COMPETITION */}
-                <AccordionItem value="item-4">
-                  <AccordionTrigger className="hover:no-underline py-4">
+                <AccordionItem value="item-4" className="border-transparent">
+                  <AccordionTrigger className="hover:no-underline hover:bg-white/5 px-3 py-4 rounded-md transition-all data-[state=open]:bg-white/5">
                       <div className="flex items-center gap-3">
-                          <Camera className="h-4 w-4 text-muted-foreground" />
-                          <span>Photo Competition</span>
+                          <Camera className="h-5 w-5 text-pink-300" />
+                          <span className="text-slate-100">Photo Competition</span>
                       </div>
                   </AccordionTrigger>
-                  <AccordionContent className="flex flex-col gap-4 px-1 pb-6">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                  <AccordionContent className="flex flex-col gap-4 px-3 pb-6 pt-4">
+                    <p className="text-sm text-slate-300 leading-relaxed">
                       Capture broad earth science perspectives and present visual works that tell a story.
                     </p>
-                    <p className="text-sm font-medium">Individual Competition (1 Participant).</p>
+                    <p className="text-sm font-medium text-yellow-400">Individual Competition (1 Participant).</p>
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" asChild>
+                      <Button size="sm" variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
                           <Link href="/dashboard/photo/details">Show More</Link>
                       </Button>
-                      
-                      <PersonalEntry 
-                        title="Photo Competition"
-                        action={registerPhoto}
-                        hasJoined={hasJoinedPhoto}
-                        redirectPath="/dashboard/competition/photo"
-                      />
+                      <div className="brightness-110">
+                        <PersonalEntry 
+                            title="Photo Competition"
+                            action={registerPhoto}
+                            hasJoined={hasJoinedPhoto}
+                            redirectPath="/dashboard/competition/photo"
+                        />
+                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
