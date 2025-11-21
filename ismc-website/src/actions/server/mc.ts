@@ -174,18 +174,35 @@ export async function updateMemberDetails(
 ): Promise<UpdateMemberFormState> {
     const session = await verifySession();
     if (!session) return { error: "Not authenticated." };
-    const { account_id } = session;
-
+    
+    const targetAccountId = formData.get("target_account_id") as string;
+    
     try {
-        const idNo = formData.get("id_no") as string;
-        const bloodType = formData.get("blood_type") as string;
+        const name = formData.get("name") as string | null;
+        const institution = formData.get("institution") as string | null;
+        const phone_num = formData.get("phone_num") as string | null;
+        const idNo = formData.get("id_no") as string | null;
+        const bloodType = formData.get("blood_type") as string | null;
+        
         const illnessJson = formData.get("illness") as string;
         const allergyJson = formData.get("allergy") as string;
+        
         const scFile = formData.get("sc_link") as File;
         const fpFile = formData.get("fp_link") as File;
 
-        const scKey = (scFile && scFile.size > 0) ? await uploadFileToR2(scFile, "member-sc", account_id) : null;
-        const fpKey = (fpFile && fpFile.size > 0) ? await uploadFileToR2(fpFile, "member-fp", account_id) : null;
+        let scKey: string | null = null;
+        if (scFile && scFile.size > 0) {
+            if (scFile.size > 1048576) return { error: "Student Card too large (>1MB)" };
+            const uploadedKey = await uploadFileToR2(scFile, "member-sc", targetAccountId);
+            if (uploadedKey) scKey = uploadedKey;
+        }
+
+        let fpKey: string | null = null;
+        if (fpFile && fpFile.size > 0) {
+             if (fpFile.size > 1048576) return { error: "Formal Photo too large (>1MB)" };
+             const uploadedKey = await uploadFileToR2(fpFile, "member-fp", targetAccountId);
+             if (uploadedKey) fpKey = uploadedKey;
+        }
 
         let illness: MedicalInfo[] | null = null;
         let allergy: MedicalInfo[] | null = null;
@@ -194,9 +211,21 @@ export async function updateMemberDetails(
             allergy = medicalInfoSchema.safeParse(JSON.parse(allergyJson || "[]")).data ?? null;
         } catch { return { error: "Failed to parse medical data." }; }
 
-        await updateMember(account_id, idNo, bloodType, illness, allergy, scKey, fpKey);
+        await updateMember(
+            targetAccountId,
+            name,
+            institution,
+            phone_num,
+            idNo,
+            bloodType, 
+            illness, 
+            allergy, 
+            scKey,
+            fpKey
+        );
 
-        revalidatePath("/dashboard/mc/team");
+        revalidatePath("/dashboard/mc");
+        
         return { message: "Details saved successfully." };
     } catch (e) {
         console.error("Update Member Error:", e);

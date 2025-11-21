@@ -1,33 +1,22 @@
 "use client";
 
+// Utils
 import { useActionState, useEffect, useState, useRef } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+
+// UI
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Eye, Pencil, Hourglass, XCircle, CheckCircle2, FileText, Loader2 } from "lucide-react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Eye,
-  Pencil,
-  Hourglass,
-  XCircle,
-  CheckCircle2,
-  FileText,
-  Loader2,
-} from "lucide-react";
-import { MemberMC, MedicalInfo, UpdateMemberFormState } from "@/actions/types/MC";
-import { updateMemberDetails } from "@/actions/server/mc";
 import { MedicalHistoryInput } from "./MedicalHistoryInput";
-import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
+import { MemberMC, MedicalInfo, UpdateMemberFormState } from "@/actions/types/MC";
+import { toast, Toaster } from "sonner";
+
+// Actions
+import { updateMemberDetails } from "@/actions/server/mc";
 
 // --- Helpers ---
 function VerificationStatusBadge({ status }: { status: number }) {
@@ -77,18 +66,20 @@ export function TeamMemberDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      <Toaster richColors/>
+      
       <DialogTrigger asChild>
         <Button variant="outline" size="icon">
           {isCurrentUser ? <Pencil className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0" key={member.account_id}>
         
         <div className="p-6 pb-4 border-b">
           <DialogHeader>
             <DialogTitle>
-              {isCurrentUser ? "Edit Your Details" : `View ${member.name || member.email}`}
+              {isCurrentUser ? "Edit Details" : `View ${member.name || member.email}`}
             </DialogTitle>
             <DialogDescription>
               {isCurrentUser ? "Please ensure your personal details matches your documents." : "Member details."}
@@ -99,31 +90,30 @@ export function TeamMemberDialog({
         <div className="flex-1 overflow-y-auto p-6">
             <form id="update-mc-member-form" action={action} className="h-full">
               <FieldGroup className="flex flex-col gap-8">
-                
-                {/* --- 1. Personal Info --- */}
+
+                <input type="hidden" name="target_account_id" value={member.account_id} />
+
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
                     Personal Information
                   </h4>
                   
-                  {/* Name & Institution */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Field>
+                       <FieldLabel>Full Name</FieldLabel>
+                       <Input name="name" defaultValue={member.name ?? ""} disabled={!isCurrentUser} placeholder="e.g. John Doe" />
+                     </Field>
                      <Field>
-                      <FieldLabel>Full Name</FieldLabel>
-                      <Input name="name" defaultValue={member.name ?? ""} disabled={!isCurrentUser} placeholder="e.g. John Doe" />
-                    </Field>
-                    <Field>
-                      <FieldLabel>Institution</FieldLabel>
-                      <Input name="institution" defaultValue={member.institution ?? ""} disabled={!isCurrentUser} placeholder="University Name" />
-                    </Field>
+                       <FieldLabel>Institution</FieldLabel>
+                       <Input name="institution" defaultValue={member.institution ?? ""} disabled={!isCurrentUser} placeholder="University Name" />
+                     </Field>
                   </div>
 
-                  {/* Phone, ID, Blood */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Field>
                       <FieldLabel>Phone Number</FieldLabel>
-                      <Input name="phone_num" defaultValue={""} disabled={!isCurrentUser} placeholder="+62..." />
+                      <Input name="phone_num" defaultValue={member.phone_num?? ""} disabled={!isCurrentUser} placeholder="+62..." />
                     </Field>
                     <Field>
                       <FieldLabel>Student Number</FieldLabel>
@@ -136,54 +126,52 @@ export function TeamMemberDialog({
                   </div>
                 </div>
 
-                {/* --- 2. Medical Info --- */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
                     Medical Information
                   </h4>
+                  
+                  <input type="hidden" name="illness" value={JSON.stringify(illnessList)} />
+                  <input type="hidden" name="allergy" value={JSON.stringify(allergyList)} />
+
                   {isCurrentUser ? (
-                    <>
-                      <input type="hidden" name="illness" value={JSON.stringify(illnessList)} />
-                      <input type="hidden" name="allergy" value={JSON.stringify(allergyList)} />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <MedicalHistoryInput label="History of Illness" items={illnessList} onChange={setIllnessList} />
                         <MedicalHistoryInput label="Allergies" items={allergyList} onChange={setAllergyList} />
-                      </div>
-                    </>
+                    </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 bg-muted/30 rounded-lg border border-dashed">
-                       <div>
-                         <span className="font-medium text-sm">Illnesses:</span>
-                         {member.illness?.length ? (
-                             <ul className="list-disc list-inside text-sm text-muted-foreground mt-1">
-                                {member.illness.map((i, idx) => (
-                                    <li key={idx}>
-                                        <span className="font-semibold text-foreground">{i.name}</span>
-                                        {i.description && <span className="ml-1">- {i.description}</span>}
-                                    </li>
-                                ))}
-                             </ul>
-                         ) : <p className="text-sm text-muted-foreground mt-1">None</p>}
-                       </div>
-                       <div>
-                         <span className="font-medium text-sm">Allergies:</span>
-                         {member.allergy?.length ? (
-                             <ul className="list-disc list-inside text-sm text-muted-foreground mt-1">
-                                {member.allergy.map((i, idx) => (
-                                    <li key={idx}>
-                                        <span className="font-semibold text-foreground">{i.name}</span>
-                                        {i.description && <span className="ml-1">- {i.description}</span>}
-                                    </li>
-                                ))}
-                             </ul>
-                         ) : <p className="text-sm text-muted-foreground mt-1">None</p>}
-                       </div>
+                        <div>
+                          <span className="font-medium text-sm">Illnesses:</span>
+                          {member.illness?.length ? (
+                              <ul className="list-disc list-inside text-sm text-muted-foreground mt-1">
+                                 {member.illness.map((i, idx) => (
+                                     <li key={idx}>
+                                         <span className="font-semibold text-foreground">{i.name}</span>
+                                         {i.description && <span className="ml-1">- {i.description}</span>}
+                                     </li>
+                                 ))}
+                              </ul>
+                          ) : <p className="text-sm text-muted-foreground mt-1">None</p>}
+                        </div>
+                        <div>
+                          <span className="font-medium text-sm">Allergies:</span>
+                          {member.allergy?.length ? (
+                              <ul className="list-disc list-inside text-sm text-muted-foreground mt-1">
+                                 {member.allergy.map((i, idx) => (
+                                     <li key={idx}>
+                                         <span className="font-semibold text-foreground">{i.name}</span>
+                                         {i.description && <span className="ml-1">- {i.description}</span>}
+                                     </li>
+                                 ))}
+                              </ul>
+                          ) : <p className="text-sm text-muted-foreground mt-1">None</p>}
+                        </div>
                     </div>
                   )}
                 </div>
 
-                {/* --- 3. Documents --- */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
@@ -193,7 +181,7 @@ export function TeamMemberDialog({
                     
                     <Field>
                       <div className="flex justify-between items-center mb-2">
-                        <FieldLabel>Student Card (SC)</FieldLabel>
+                        <FieldLabel>Student Card</FieldLabel>
                         <VerificationStatusBadge status={member.sc_verified} />
                       </div>
                       <CustomFileInput 
@@ -201,6 +189,7 @@ export function TeamMemberDialog({
                         accept=".pdf,.jpg,.png" 
                         currentFileUrl={member.sc_link}
                         disabled={!isCurrentUser}
+                        maxSizeMB={1}
                       />
                     </Field>
 
@@ -214,12 +203,12 @@ export function TeamMemberDialog({
                         accept=".jpg,.png" 
                         currentFileUrl={member.fp_link}
                         disabled={!isCurrentUser}
+                        maxSizeMB={1}
                       />
                     </Field>
                   </div>
                 </div>
 
-                 {/* Notes Section */}
                 {member.notes && member.notes.length > 0 && (
                   <div className="rounded-md bg-yellow-50 border border-yellow-200 p-4 mt-2">
                     <div className="flex items-center gap-2 mb-2">

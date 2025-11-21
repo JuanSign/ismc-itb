@@ -27,6 +27,7 @@ export type MemberMC = {
   email: string;
   name: string | null;
   institution: string | null;
+  phone_num: string | null;
   blood_type: string | null;
   id_no: string | null;
   sc_link: string | null;
