@@ -29,7 +29,7 @@ export const VerifyEmailTemplate = ({ confirmLink }: VerifyEmailProps) => (
             src={FOOTER_URL}
             width="100%"
             alt="ISMC XV Footer"
-            style={{ maxWidth: '100%', borderRadius: '0 0 8px 8px' }}
+            style={{ maxWidth: '100%' }}
           />
         </Section>
         <Heading style={h1}>Confirm your email address</Heading>
