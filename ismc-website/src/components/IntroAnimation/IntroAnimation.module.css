@@ -1,0 +1,65 @@
+.block {
+  background: var(--color-blue);
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  height: 100%;
+  width: 100%;
+}
+
+.divider {
+  align-self: center;
+  background-color: var(--color-blue-lighter);
+  height: 50rem;
+  transform-origin: center top;
+  transform: scaleY(0%);
+  width: 1px;
+  width: 3px;
+  will-change: transform, opacity;
+}
+
+.introLogo {
+  align-items: center;
+  display: flex;
+  gap: 1.5rem;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.loader {
+  height: 100svh;
+  left: 0;
+  overflow: hidden;
+  pointer-events: all;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  z-index: 100000;
+}
+
+.overlay {
+  display: flex;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.word {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.word h1 {
+  color: var(--color-blue-lighter);
+  font-family: var(--font-giga-sans);
+  font-size: 2rem;
+  letter-spacing: -0.05rem;
+  will-change: transform;
+}
+
+.word1 h1 {
+  transform: translateY(-120%);
+}
+.word2 h1 {
+  transform: translateY(120%);
+}

@@ -1,0 +1,22 @@
+.column {
+  flex: 1;
+}
+
+.columnLeft {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 1rem;
+}
+
+.content {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+}
+
+@media (max-width: 1000px) {
+  .content {
+    flex-direction: column;
+  }
+}
