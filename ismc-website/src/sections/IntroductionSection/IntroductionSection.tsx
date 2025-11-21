@@ -77,27 +77,32 @@ export default function IntroductionSection() {
               </div>
               <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
                 <h3 className="font-heading text-2xl md:text-4xl font-medium">
+                  Hackathon
+                </h3>
+              </div>
+              <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
+                <h3 className="font-heading text-2xl md:text-4xl font-medium">
+                  Paper Competition
+                </h3>
+              </div>
+              <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
+                <h3 className="font-heading text-2xl md:text-4xl font-medium">
+                  Poster Competition
+                </h3>
+              </div>
+              <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
+                <h3 className="font-heading text-2xl md:text-4xl font-medium">
+                  Photo Competition
+                </h3>
+              </div>              
+              <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
+                <h3 className="font-heading text-2xl md:text-4xl font-medium">
                   Mining Talks
                 </h3>
               </div>
               <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
                 <h3 className="font-heading text-2xl md:text-4xl font-medium">
-                  Paper Comp.
-                </h3>
-              </div>
-              <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
-                <h3 className="font-heading text-2xl md:text-4xl font-medium">
-                  Photo Comp.
-                </h3>
-              </div>
-              <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
-                <h3 className="font-heading text-2xl md:text-4xl font-medium">
                   Beyond the Pit
-                </h3>
-              </div>              
-              <div className="what-we-do-tag inline-block px-6 py-3 md:px-8 md:py-4 border border-neutral-700 rounded-full">
-                <h3 className="font-heading text-2xl md:text-4xl font-medium">
-                  Hackathon
                 </h3>
               </div>
             </div>

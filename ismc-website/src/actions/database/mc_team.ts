@@ -4,7 +4,7 @@ import { MemberMC, TeamMC } from "../types/MC";
 export async function checkTeamNameExists(teamName: string): Promise<boolean> {
     const result = await DB`
         SELECT 1 FROM mc_team 
-        WHERE name ILIKE ${teamName}
+        WHERE name LIKE ${teamName}
     `;
     return result.length > 0;
 }

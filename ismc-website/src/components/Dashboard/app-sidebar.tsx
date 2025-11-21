@@ -36,11 +36,11 @@ export const data = {
       url: "/dashboard/event",
       icon: Calendar,
     },
-    {
-      title: "FAQ",
-      url: "/dashboard/faq",
-      icon: FileQuestionMarkIcon,
-    },
+    // {
+    //   title: "FAQ",
+    //   url: "/dashboard/faq",
+    //   icon: FileQuestionMarkIcon,
+    // },
   ],
 }
 

@@ -18,11 +18,11 @@ const services = [
   {
     title: "Mining Insight",
     description:
-      "An inclusive competition series open to all backgrounds, not just engineering. Express your creativity and innovation through our Hackathon, Paper competition, Poster design, and Photography contests.",
-    image: "/assets/mining_insight.jpg",
+      "Mining Insight is ISMC's multidisciplinary competition series that bridges mining, business strategy, and earth science. Through its four branches; Paper, Hackathon, Poster, and Photo, participants tackle real industry challenges, innovate with technology, and showcase geological perspectives through visual storytelling.",
+    image: "/assets/mining-insight.jpg",
   },
   {
-    title: "Mining Talk",
+    title: "Mining Talks",
     description:
       "A professional seminar designed to provide in-depth insights into the industry. We bring together experts, academics, and practitioners to explore challenges, opportunities, and practical knowledge to prepare you for a professional career in mining.",
     image: "/assets/mining_talk.jpg",
@@ -96,18 +96,11 @@ export default function DetailSection() {
 
   return (
     <section className={styles.services} ref={containerRef}>
-      <div className={styles.servicesHeader}>
-        <div className={styles.col1}></div>
-        <div className={styles.col2}>
-          <h1>All Services</h1>
-        </div>
-      </div>
-
       {services.map((service, index) => (
         <div key={index} className={styles.service}>
           <div className={styles.serviceInfo}>
-            <h1>{service.title}</h1>
-            <p>{service.description}</p>
+            <h1 className="font-heading">{service.title}</h1>
+            <p className="font-sans">{service.description}</p>
           </div>
           <div className={styles.serviceImg}>
             <div className={styles.imgContainer}>

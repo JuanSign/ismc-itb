@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CompetitionEntry } from "@/components/Competition/CompetitionEntry";
 import { LockedSection } from "@/components/LockedSection/LockedSection";
 import { PersonalEntry } from "@/components/Competition/PersonalEntry";
-import { Pickaxe, Lightbulb, FileText, Presentation, Cpu, Camera } from "lucide-react";
+import { Pickaxe, Lightbulb, FileText, Presentation, Cpu, Camera, Download } from "lucide-react";
 import { Toaster } from "sonner";
 
 // Actions
@@ -35,7 +35,7 @@ export default async function CompetitionPage() {
   const hasJoinedPhoto = session.events!.includes("PHOTO");
 
   const isMCLocked = hasJoinedInsight; 
-  const isInsightLocked = hasJoinedMC; 
+  const isInsightLocked = true; 
 
   const lockMessage = "You must choose between Mining Competition or Mining Insight.";
 
@@ -58,7 +58,6 @@ export default async function CompetitionPage() {
           <Card className={glassCardClass}>
             <CardHeader>
               <div className="flex items-center gap-3">
-                {/* Icon container: semi-transparent white */}
                 <div className="p-2 bg-white/10 rounded-lg border border-white/5">
                   <Pickaxe className="h-6 w-6 text-blue-400" />
                 </div>
@@ -75,10 +74,18 @@ export default async function CompetitionPage() {
                 from orienteering to written tests.
               </p>
             </CardContent>
-            <CardFooter className="flex gap-3 justify-end">
+            <CardFooter className="flex flex-wrap gap-3 justify-end">
+              <Button variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
+                <a href={`${process.env.NEXT_PUBLIC_CDN_URL}/mc/booklet_mc.pdf`} target="_blank" rel="noopener noreferrer">
+                   <Download className="mr-2 h-4 w-4" />
+                   Booklet
+                </a>
+              </Button>
+
               <Button variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
                 <Link href="/dashboard/mc/details">Show More</Link>
               </Button>
+              
               <div className="brightness-110">
                 <CompetitionEntry 
                   title="Mining Competition"
@@ -97,7 +104,7 @@ export default async function CompetitionPage() {
            <LockedSection 
              title="Mining Insight"
              description="A broader competition open to participants beyond the mining field."
-             subtext={`${lockMessage} You have already joined the Mining Competition.`}
+             subtext={`Coming soon : 23 November 2025`}
              borderColorClass="border-l-yellow-500"
            />
         ) : (

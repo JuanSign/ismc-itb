@@ -6,6 +6,11 @@ import PageTransition from "@/components/PageTransition/PageTransition";
 export const metadata: Metadata = {
   title: "ISMC XV",
   description: "Indonesian Students Mining Competition",
+  icons: {
+    icon: "/icon.png?v=2",          
+    shortcut: "/favicon.ico?v=2",
+    apple: "/apple-touch-icon.png?v=2",
+  },
 };
 
 export default function RootLayout({
