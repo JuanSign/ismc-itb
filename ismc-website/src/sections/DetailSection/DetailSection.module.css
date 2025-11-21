@@ -1,0 +1,144 @@
+.services {
+  background: #071A3D; 
+  color: #f5f5f5;      
+  padding: 0 2em 8em 2em; 
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.servicesHeader {
+  width: 100%;
+  display: flex;
+  gap: 4em;
+  margin-bottom: 2em;
+  padding-top: 2em; 
+}
+
+.col1 {
+  flex: 2;
+}
+
+.col2 {
+  flex: 5;
+  padding: 1em;
+}
+
+.col2 h1 {
+  color: #fff;
+  font-size: 36px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.service {
+  display: flex;
+  gap: 2em;
+  /* Height is handled by GSAP */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.serviceInfo {
+  flex: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1em 1em 1em 0;
+}
+
+.serviceInfo h1 {
+  color: #fff;
+  font-size: 32px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.serviceInfo p {
+  color: #d1d5db;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 150%;
+  margin: 0;
+  max-width: 90%;
+}
+
+.serviceImg {
+  flex: 5;
+  width: 100%;
+  height: 100%;
+  padding: 1em 0 1em 1em;
+  display: flex;
+  align-items: center;
+}
+
+.imgContainer {
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative; 
+}
+
+.imgContainer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #071A3D; 
+  opacity: 0.5; 
+  z-index: 1;
+  pointer-events: none; 
+  transition: opacity 0.3s ease;
+}
+
+.service:hover .imgContainer::after {
+  opacity: 0;
+} 
+
+.imgContainer img {
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .services {
+    padding: 0 1em 4em 1em;
+  }
+
+  .servicesHeader {
+    gap: 1em;
+    margin-bottom: 1em;
+  }
+
+  .col1 { display: none; }
+  .col2 { padding: 0; }
+
+  .service {
+    gap: 1em;
+    flex-direction: column-reverse;
+  }
+
+  .serviceInfo {
+    padding: 0.5em 0;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .serviceInfo h1 {
+    font-size: 24px;
+  }
+
+  .serviceInfo p {
+    font-size: 14px;
+    max-width: 100%;
+  }
+
+  .serviceImg {
+    padding: 0.5em 0;
+  }
+}

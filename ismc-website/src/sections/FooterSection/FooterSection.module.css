@@ -1,0 +1,148 @@
+.footer {
+  background-color: #071A3D;
+  color: #ffffff;
+  position: relative;
+  width: 100%;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4rem 2rem 2rem 2rem;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ctaContainer {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  position: relative;
+  z-index: 2;
+}
+
+.headline {
+  font-size: clamp(3rem, 8vw, 8rem);
+  font-weight: 600;
+  line-height: 0.9;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.headline span {
+  display: inline-block;
+  transform: translateY(100%);
+}
+
+/* The Circle Button */
+.registerBtn {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #071A3D;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: transform 0.3s ease;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.registerBtn::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #FFD700;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  z-index: 1;
+}
+
+.registerBtn span {
+  position: relative;
+  z-index: 2;
+}
+
+.registerBtn:hover::after {
+  transform: scale(1);
+}
+
+.registerBtn:hover {
+  transform: scale(1.05);
+}
+
+.bottomBar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.socialLink {
+  color: #ffffff;
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 2px;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.socialLink:hover {
+  color: #FFD700;
+}
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 25vw;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    min-height: 60vh;
+  }
+  
+  .registerBtn {
+    width: 140px;
+    height: 140px;
+    font-size: 1rem;
+  }
+
+  .bottomBar {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+  }
+}
