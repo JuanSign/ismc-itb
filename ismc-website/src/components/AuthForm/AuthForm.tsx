@@ -61,7 +61,7 @@ function AnimatedDescription({ isLogin }: { isLogin: boolean }) {
         <CardDescription className="text-muted-foreground">
           {isLogin
             ? "Enter your credentials below to login"
-            : "Sign up to join IECOM 2026"}
+            : "Sign up to join ISMC XV"}
         </CardDescription>
       </motion.div>
     </AnimatePresence>

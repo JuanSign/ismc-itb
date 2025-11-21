@@ -8,7 +8,7 @@ export default async function Register() {
     <div className="relative flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <Image
         src={'/pages/register/bg.jpg'}
-        alt="IECOM 2026 Registration"
+        alt="ISMC XV Registration"
         priority
         fill
         className="object-cover pointer-events-none"

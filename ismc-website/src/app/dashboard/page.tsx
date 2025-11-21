@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-// --- Components ---
 import { CompetitionEntry } from "@/components/Competition/CompetitionEntry";
 import { PersonalEntry } from "@/components/Competition/PersonalEntry";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,6 @@ import {
 } from "lucide-react";
 import { Toaster } from "sonner";
 
-// --- Actions ---
 import { verifySession } from "@/actions/server/session";
 import { createTeam as createMC, joinTeam as joinMC } from "@/actions/server/mc";
 import { createTeam as createHack, joinTeam as joinHack } from "@/actions/server/hackathon";
