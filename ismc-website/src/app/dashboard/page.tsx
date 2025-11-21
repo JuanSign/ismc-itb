@@ -1,105 +1,39 @@
-import Link from "next/link";
+// Utils
 import { redirect } from "next/navigation";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
 
-import { CompetitionEntry } from "@/components/Competition/CompetitionEntry";
-import { PersonalEntry } from "@/components/Competition/PersonalEntry";
+// UI
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Pickaxe,
-  Lightbulb,
-  FileText,
-  Presentation,
-  Lock,
-  AlertCircle,
-  Cpu,
-  Camera
-} from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { CompetitionEntry } from "@/components/Competition/CompetitionEntry";
+import { LockedSection } from "@/components/LockedSection/LockedSection";
+import { PersonalEntry } from "@/components/Competition/PersonalEntry";
+import { Pickaxe, Lightbulb, FileText, Presentation, Cpu, Camera } from "lucide-react";
 import { Toaster } from "sonner";
 
-import { verifySession } from "@/actions/server/session";
-import { createTeam as createMC, joinTeam as joinMC } from "@/actions/server/mc";
+// Actions
 import { createTeam as createHack, joinTeam as joinHack } from "@/actions/server/hackathon";
+import { createTeam as createMC, joinTeam as joinMC } from "@/actions/server/mc";
 import { createTeam as createPaper, joinTeam as joinPaper } from "@/actions/server/paper";
-import { registerPoster } from "@/actions/server/poster";
 import { registerPhoto } from "@/actions/server/photo";
-
-function LockedSection({ 
-  title, 
-  description, 
-  subtext,
-  borderColorClass 
-}: { 
-  title: string; 
-  description: string; 
-  subtext?: string;
-  borderColorClass: string; 
-}) {
-  return (
-    <Card className={cn(
-        "bg-muted/40 border-dashed border-muted-foreground/25 opacity-80 border-l-4",
-        borderColorClass 
-    )}>
-      <CardHeader>
-        <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-            <Badge variant="secondary" className="text-xs">
-                <Lock className="w-3 h-3 mr-1" /> Locked
-            </Badge>
-        </div>
-        <CardTitle className="text-xl text-muted-foreground/90">
-            {title}
-        </CardTitle>
-        <CardDescription className="text-base text-muted-foreground/70">
-          {description}
-        </CardDescription>
-      </CardHeader>
-      {subtext && (
-        <CardContent>
-            <Alert variant="default" className="bg-background/50 text-muted-foreground border-muted-foreground/20">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                    {subtext}
-                </AlertDescription>
-            </Alert>
-        </CardContent>
-      )}
-    </Card>
-  );
-}
+import { registerPoster } from "@/actions/server/poster";
+import { verifySession } from "@/actions/server/session";
 
 export default async function CompetitionPage() {
   const session = await verifySession();
-  if (!session) redirect("/");
+  if (!session) redirect("/register");
 
   const insightEvents = ["PAPER", "HACK", "POSTER", "PHOTO"]; 
 
-  // Check memberships
   const hasJoinedMC = session.events!.includes("MC");
+  const hasJoinedInsight = session.events!.some((e) => insightEvents.includes(e));
   
   const hasJoinedHack = session.events!.includes("HACK");
   const hasJoinedPaper = session.events!.includes("PAPER");
   const hasJoinedPoster = session.events!.includes("POSTER");
   const hasJoinedPhoto = session.events!.includes("PHOTO");
 
-  const hasJoinedInsight = session.events!.some((e) => insightEvents.includes(e));
-
-  // Lock Logic
   const isMCLocked = hasJoinedInsight; 
   const isInsightLocked = hasJoinedMC; 
 
@@ -145,7 +79,7 @@ export default async function CompetitionPage() {
               <CompetitionEntry 
                 title="Mining Competition"
                 hasJoined={hasJoinedMC}
-                redirectPath="/dashboard/competition/mc/team"
+                redirectPath="/dashboard/mc"
                 createAction={createMC}
                 joinAction={joinMC}
               />
