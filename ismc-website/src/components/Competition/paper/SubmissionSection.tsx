@@ -4,12 +4,11 @@ import React, { useState, useActionState, useEffect } from "react";
 import { submitPaper, uploadOriginalityDoc } from "@/actions/server/paper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Loader2, Info, Download } from "lucide-react";
+import { Loader2, Info, Download, CheckCircle2, XCircle, Hourglass } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
@@ -20,17 +19,31 @@ const initialState: SubmitState = {};
 
 // --- Helper: Parse SDD ---
 function parseSDD(sdd: string | null) {
-  if (!sdd) return { title: "", theme: "", desc: "" };
+  if (!sdd) return { title: "", theme: "" };
   const match = sdd.match(/^\[(.*?)\]\[(.*?)\]([\s\S]*)$/);
-  if (match) return { title: match[1], theme: match[2], desc: match[3] };
-  return { title: "", theme: "", desc: sdd };
+  if (match) return { title: match[1], theme: match[2] };
+  // Fallback if format doesn't match
+  return { title: "", theme: "" };
 }
 
-// --- Verification Badge for Atomic Uploads ---
+// --- Verification Badge ---
 function VerificationBadge({ status }: { status: number | null }) {
-  if (status === 2) return <Badge className="bg-emerald-600">Verified</Badge>;
-  if (status === 1) return <Badge variant="destructive">Rejected</Badge>;
-  return <Badge variant="secondary">Pending</Badge>;
+  const config = {
+    0: { icon: <Hourglass className="h-4 w-4" />, className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
+    1: { icon: <XCircle className="h-4 w-4" />, className: "text-red-400 bg-red-400/10 border-red-400/20" },
+    2: { icon: <CheckCircle2 className="h-4 w-4" />, className: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
+  }[status ?? 0] || { icon: null, className: "" };
+
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      className={cn("h-8 w-8 p-0 cursor-default hover:bg-transparent", config.className)}
+      disabled
+    >
+      {config.icon}
+    </Button>
+  );
 }
 
 const OD_TEMPLATE_URL = "/files/templates/originality-statement.pdf";
@@ -55,7 +68,6 @@ export function SubmissionSection({
   const parsed = parseSDD(sdd);
   const [title, setTitle] = useState(parsed.title);
   const [theme, setTheme] = useState(parsed.theme);
-  const [description, setDescription] = useState(parsed.desc);
   
   const [state, action, isPending] = useActionState(submitPaper, initialState);
 
@@ -72,28 +84,35 @@ export function SubmissionSection({
     "Integrated Water-Energy Nexus: Climate-Resilient Strategies"
   ];
 
+  const cardClass = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
+  const inputClass = "bg-black/20 border-white/10 text-slate-200 placeholder:text-slate-500 focus:ring-blue-500/50";
+  const labelClass = "text-slate-300";
+
   return (
-    <Card className={cn("border-l-4", className)}>
+    <Card className={cn("border-l-4", cardClass, className)}>
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline" className="bg-background">{step}</Badge>
-            <span className="text-sm font-medium text-muted-foreground">Paper Submission</span>
+            <Badge className="bg-indigo-600 hover:bg-indigo-500 text-white">
+                {step}
+            </Badge>
+            <span className="text-sm font-medium text-slate-400">Paper Submission</span>
         </div>
-        <CardTitle>Submission & Originality</CardTitle>
-        <CardDescription>Submit your Proof of Originality and Paper Abstract.</CardDescription>
+        <CardTitle className="text-white">Submission & Originality</CardTitle>
+        <CardDescription className="text-slate-400">Submit your Proof of Originality and Paper Abstract.</CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-8">
         
         {/* --- PART 1: ORIGINALITY DOCUMENT --- */}
         <div className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                    1. Proof of Originality
-                    <a href={OD_TEMPLATE_URL} download className="text-xs font-normal text-blue-600 hover:underline flex items-center gap-1 ml-2">
-                        <Download className="h-3 w-3" /> Download Template
-                    </a>
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <h4 className="font-semibold text-slate-200 flex items-center gap-2">
+                    <div className="bg-indigo-500/20 text-indigo-300 w-6 h-6 rounded-full flex items-center justify-center text-xs border border-indigo-500/30">1</div>
+                    Proof of Originality
                 </h4>
+                <a href={OD_TEMPLATE_URL} download className="text-xs font-medium text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
+                    <Download className="h-3 w-3" /> Template
+                </a>
             </div>
             
             <FileUploaderField
@@ -108,44 +127,68 @@ export function SubmissionSection({
 
         {/* --- PART 2: ABSTRACT SUBMISSION --- */}
         <div className="space-y-6">
-            <div className="flex items-center justify-between border-b pb-2">
-                <h4 className="font-semibold">2. Abstract Submission</h4>
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <h4 className="font-semibold text-slate-200 flex items-center gap-2">
+                    <div className="bg-indigo-500/20 text-indigo-300 w-6 h-6 rounded-full flex items-center justify-center text-xs border border-indigo-500/30">2</div>
+                    Paper Submission
+                </h4>
                 <VerificationBadge status={subVerified} />
             </div>
 
             <form action={action} className="space-y-6">
                 <div className="grid gap-5">
                     <div className="space-y-2">
-                        <Label>Paper Title</Label>
-                        <Input placeholder="Enter paper title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                        <Label className={labelClass}>Paper Title</Label>
+                        <Input 
+                            className={inputClass}
+                            placeholder="Enter paper title" 
+                            value={title} 
+                            onChange={(e) => setTitle(e.target.value)} 
+                            required 
+                        />
                     </div>
                     <div className="space-y-2">
-                        <Label>Select Theme</Label>
+                        <Label className={labelClass}>Select Theme</Label>
                         <Select onValueChange={setTheme} value={theme} required>
-                            <SelectTrigger><SelectValue placeholder="Select a theme..." /></SelectTrigger>
-                            <SelectContent>
-                                {themes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                            <SelectTrigger className={inputClass}>
+                                <SelectValue placeholder="Select a theme..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
+                                {themes.map((t) => (
+                                    <SelectItem key={t} value={t} className="focus:bg-white/10 focus:text-white cursor-pointer">
+                                        {t}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Abstract</Label>
-                        <Textarea placeholder="Paste your abstract here..." className="min-h-[200px]" value={description} onChange={(e) => setDescription(e.target.value)} required />
-                    </div>
                     
-                    {/* Merged description field for server */}
-                    <input type="hidden" name="submission_desc" value={`[${title}][${theme}]${description}`} />
+                    {/* Hidden input for server compatibility. 
+                        Format: [Title][Theme] 
+                        (Description part is now empty/implicit) 
+                    */}
+                    <input type="hidden" name="submission_desc" value={`[${title}][${theme}]`} />
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                            <Label>Abstract / Full Paper (PDF)</Label>
-                            {sdLink && <a href={sdLink} target="_blank" className="text-xs text-blue-600 hover:underline flex items-center gap-1"><Info className="h-3 w-3" /> View Current File</a>}
+                            <Label className={labelClass}>Abstract / Full Paper (PDF)</Label>
+                            {sdLink && (
+                                <a href={sdLink} target="_blank" className="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
+                                    <Info className="h-3 w-3" /> View Current File
+                                </a>
+                            )}
                         </div>
-                        <CustomFileInput name="doc_submission" accept=".pdf" currentFileUrl={sdLink} placeholder="Upload PDF..." />
+                        <CustomFileInput 
+                            name="doc_submission" 
+                            accept=".pdf" 
+                            currentFileUrl={sdLink} 
+                            placeholder="Upload PDF..." 
+                        />
                     </div>
                 </div>
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold" disabled={isPending}>
-                    {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</> : "Submit Abstract"}
+                
+                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold border-none" disabled={isPending}>
+                    {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</> : "Submit Paper"}
                 </Button>
             </form>
         </div>

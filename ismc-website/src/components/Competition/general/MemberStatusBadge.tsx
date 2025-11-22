@@ -87,7 +87,7 @@ export function MemberStatusBadge({
       <PopoverTrigger asChild>
         {StatusIcon}
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 bg-slate-950 border-white/10 text-slate-100 shadow-xl" align="end">
+      <PopoverContent className="w-80 p-0 bg-slate-950 border-white/10 text-slate-100 shadow-xl overflow-hidden" align="end">
         
         <div className="flex items-center gap-2 border-b border-white/10 p-4 bg-white/5">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 border border-white/10 shadow-sm">

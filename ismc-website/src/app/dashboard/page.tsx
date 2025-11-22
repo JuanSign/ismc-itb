@@ -35,7 +35,7 @@ export default async function CompetitionPage() {
   const hasJoinedPhoto = session.events!.includes("PHOTO");
 
   const isMCLocked = hasJoinedInsight; 
-  const isInsightLocked = true; 
+  const isInsightLocked = hasJoinedMC; 
 
   const lockMessage = "You must choose between Mining Competition or Mining Insight.";
 
@@ -104,7 +104,7 @@ export default async function CompetitionPage() {
            <LockedSection 
              title="Mining Insight"
              description="A broader competition open to participants beyond the mining field."
-             subtext={`Coming soon : 23 November 2025`}
+             subtext={`${lockMessage} You have already joined Mining Competition.`}
              borderColorClass="border-l-yellow-500"
            />
         ) : (
@@ -140,14 +140,11 @@ export default async function CompetitionPage() {
                     </p>
                     <p className="text-sm font-medium text-yellow-400">Open to teams of 1-3 participants.</p>
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
-                          <Link href="/dashboard/paper/details">Show More</Link>
-                      </Button>
                       <div className="brightness-110">
                         <CompetitionEntry 
                             title="Paper Competition"
                             hasJoined={hasJoinedPaper}
-                            redirectPath="/dashboard/competition/paper/team"
+                            redirectPath="/dashboard/paper"
                             createAction={createPaper}
                             joinAction={joinPaper}
                             teamNamePlaceholder="e.g. Innovation Squad"
@@ -171,14 +168,11 @@ export default async function CompetitionPage() {
                     </p>
                     <p className="text-sm font-medium text-yellow-400">Open to teams of 3-5 participants.</p>
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
-                          <Link href="/dashboard/hackathon/details">Show More</Link>
-                      </Button>
                       <div className="brightness-110">
                         <CompetitionEntry 
                             title="Hackathon"
                             hasJoined={hasJoinedHack}
-                            redirectPath="/dashboard/competition/hackathon/team"
+                            redirectPath="/dashboard/hackathon"
                             createAction={createHack}
                             joinAction={joinHack}
                             teamNamePlaceholder="e.g. Tech Miners"
@@ -202,15 +196,12 @@ export default async function CompetitionPage() {
                     </p>
                     <p className="text-sm font-medium text-yellow-400">Individual Competition (1 Participant).</p>
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
-                          <Link href="/dashboard/poster/details">Show More</Link>
-                      </Button>
                       <div className="brightness-110">
                         <PersonalEntry 
                             title="Poster Competition"
                             action={registerPoster}
                             hasJoined={hasJoinedPoster}
-                            redirectPath="/dashboard/competition/poster"
+                            redirectPath="/dashboard/poster"
                         />
                       </div>
                     </div>
@@ -231,15 +222,12 @@ export default async function CompetitionPage() {
                     </p>
                     <p className="text-sm font-medium text-yellow-400">Individual Competition (1 Participant).</p>
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
-                          <Link href="/dashboard/photo/details">Show More</Link>
-                      </Button>
                       <div className="brightness-110">
                         <PersonalEntry 
                             title="Photo Competition"
                             action={registerPhoto}
                             hasJoined={hasJoinedPhoto}
-                            redirectPath="/dashboard/competition/photo"
+                            redirectPath="/dashboard/photo"
                         />
                       </div>
                     </div>

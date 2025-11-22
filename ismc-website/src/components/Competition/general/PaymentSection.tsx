@@ -74,6 +74,9 @@ export function PaymentSection({
 
   // Use glassmorphism card class
   const cardClass = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
+  
+  // Check if there is only one payment method to adjust layout
+  const isSingleMethod = paymentMethods.length === 1;
 
   return (
     <Card className={cn("border-l-4", cardClass, className)}>
@@ -94,16 +97,23 @@ export function PaymentSection({
                 </CardDescription>
             </div>
             <div className="flex flex-col items-end">
-                 <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Amount</span>
-                 <span className="text-2xl font-bold text-yellow-400 tracking-tight">{price}</span>
+                  <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Amount</span>
+                  <span className="text-2xl font-bold text-yellow-400 tracking-tight">{price}</span>
             </div>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-8">
         
-        {/* Payment Methods Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Payment Methods Grid - UPDATED HERE */}
+        <div className={cn(
+            "grid gap-4",
+            // If single: 1 column, max-width to look like a card, centered
+            // If multiple: Standard 1 column mobile, 2 columns desktop
+            isSingleMethod 
+                ? "grid-cols-1 max-w-lg mx-auto w-full" 
+                : "grid-cols-1 md:grid-cols-2"
+        )}>
             {paymentMethods.map((method, index) => (
                 <div 
                     key={index} 
