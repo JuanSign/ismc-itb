@@ -31,7 +31,7 @@ function VerificationBadge({ status }: { status: number | null }) {
   return <Badge variant="secondary">Pending</Badge>;
 }
 
-const OD_TEMPLATE_URL = "/files/templates/originality-statement.pdf";
+const OD_TEMPLATE_URL = "https://assets.ismc-xv.com/Statement%20of%20Originality.docx";
 
 export function PosterSubmissionSection({
   sdLink,

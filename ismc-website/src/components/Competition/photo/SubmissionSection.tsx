@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Loader2, Info, Download } from "lucide-react";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
 import { FileUploaderField } from "@/components/FileUploaderField/FileUploaderField"
 
@@ -31,7 +30,7 @@ function VerificationBadge({ status }: { status: number | null }) {
   return <Badge variant="secondary">Pending</Badge>;
 }
 
-const OD_TEMPLATE_URL = "/files/templates/originality-statement.pdf";
+const OD_TEMPLATE_URL = "https://assets.ismc-xv.com/Statement%20of%20Originality.docx";
 
 export function PhotoSubmissionSection({
   sdLink,
@@ -52,7 +51,6 @@ export function PhotoSubmissionSection({
 }) {
   const parsed = parseSDD(sdd);
   const [title, setTitle] = useState(parsed.title);
-  const [theme, setTheme] = useState(parsed.theme);
   const [description, setDescription] = useState(parsed.desc);
   
   const [state, action, isPending] = useActionState(submitPhoto, initialState);
@@ -61,16 +59,6 @@ export function PhotoSubmissionSection({
     if (state.error) toast.error(state.error);
     if (state.message) toast.success(state.message);
   }, [state]);
-
-  // Broad Earth Science themes mentioned in description
-  const themes = [
-    "Geology",
-    "Environment",
-    "Energy",
-    "Sustainability",
-    "Natural Dynamics",
-    "Human Activity & Earth"
-  ];
 
   return (
     <Card className={cn("border-l-4", className)}>
@@ -120,21 +108,12 @@ export function PhotoSubmissionSection({
                         <Input placeholder="Enter photo title" value={title} onChange={(e) => setTitle(e.target.value)} required />
                     </div>
                     <div className="space-y-2">
-                        <Label>Select Category/Theme</Label>
-                        <Select onValueChange={setTheme} value={theme} required>
-                            <SelectTrigger><SelectValue placeholder="Select a category..." /></SelectTrigger>
-                            <SelectContent>
-                                {themes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
                         <Label>Caption / Story</Label>
                         <p className="text-xs text-muted-foreground">Explain the story behind your photo.</p>
                         <Textarea placeholder="Write your caption..." className="min-h-[150px]" value={description} onChange={(e) => setDescription(e.target.value)} required />
                     </div>
                     
-                    <input type="hidden" name="submission_desc" value={`[${title}][${theme}]${description}`} />
+                    <input type="hidden" name="submission_desc" value={`[${title}][${description}]`} />
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">

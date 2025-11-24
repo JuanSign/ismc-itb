@@ -22,6 +22,7 @@ import { TeamMemberDialog } from "@/components/Competition/hack/TeamMemberDialog
 import { PaymentSection } from "@/components/Competition/general/PaymentSection";
 import { SubmissionSection } from "@/components/Competition/hack/SubmissionSection";
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
+import { Toaster } from "sonner";
 
 const GLASS_CARD = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
 
@@ -111,7 +112,8 @@ export default async function HackathonTeamPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
-        
+        <Toaster richColors/>
+
         {/* --- STEP 1: TEAM INFO (Blue) --- */}
         <Card className={`border-l-4 border-l-blue-600 ${GLASS_CARD}`}>
           <CardHeader>
@@ -208,14 +210,9 @@ export default async function HackathonTeamPage() {
                     bankName: "BCA",
                     accountNumber: "4490380731",
                     accountHolder: "Dippo Haryo Satriyo Ditho"
-                  },
-                  {
-                    bankName: "Mandiri",
-                    accountNumber: "1610015784197",
-                    accountHolder: "Rihhadatul Aisy"
                   }
                 ]}
-              price="Rp7.500.000"
+              price="Rp200.000"
               uploadAction={updateBilling}
             />
         )}

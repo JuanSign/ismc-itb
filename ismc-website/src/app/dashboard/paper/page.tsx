@@ -13,6 +13,7 @@ import { TeamMemberDialog } from "@/components/Competition/paper/TeamMemberDialo
 import { PaymentSection } from "@/components/Competition/general/PaymentSection";
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
 import { SubmissionSection } from "@/components/Competition/paper/SubmissionSection";
+import { Toaster } from "sonner";
 
 // --- Helper: Initials ---
 function getInitials(name: string | null, email: string) {
@@ -47,13 +48,13 @@ export default async function PaperTeamPage() {
   const currentUser = members.find(m => m.account_id === currentUserAccountId);
   const isManager = currentUser?.role === 'MANAGER';
 
-  const isPaymentLocked = teamStatus === 0; 
+  const isPaymentLocked = teamStatus < 1; 
   const isSubmissionLocked = teamStatus < 2;
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
-        
+        <Toaster richColors/>
         {/* --- STEP 1: TEAM INFO --- */}
         <Card className={`border-l-4 border-l-blue-600 ${GLASS_CARD}`}>
           <CardHeader>

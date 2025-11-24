@@ -1,5 +1,5 @@
 import { DB } from "@/lib/DB";
-import { MCTeam } from "../types/McAdmin";
+import { MCTeam } from "../types/Admin";
 import { verifySession } from "../server/session";
 import { redirect } from "next/navigation";
 

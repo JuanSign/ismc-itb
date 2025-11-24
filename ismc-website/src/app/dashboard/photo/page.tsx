@@ -13,6 +13,7 @@ import { PhotoMemberDialog } from "@/components/Competition/photo/MemberDialog";
 import { PaymentSection } from "@/components/Competition/general/PaymentSection";
 import { PhotoSubmissionSection } from "@/components/Competition/photo/SubmissionSection";
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
+import { Toaster } from "sonner";
 
 // --- SHARED GLASS STYLE ---
 const GLASS_CARD = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
@@ -78,16 +79,13 @@ export default async function PhotoPage() {
   const { member } = await getPhotoPageData();
   const status = member.status ?? 0;
 
-  const isDocsVerified = member.sc_verified === 2 && member.fp_verified === 2;
-  const isPaymentVerified = member.pp_verified === 2;
-
-  const isPaymentLocked = !isDocsVerified;
-  const isSubmissionLocked = !isPaymentVerified;
+  const isPaymentLocked = status < 1;
+  const isSubmissionLocked = status < 2;
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
-        
+        <Toaster richColors/>
         {/* --- STEP 1: PARTICIPANT INFO --- */}
         <Card className={`border-l-4 border-l-blue-600 ${GLASS_CARD}`}>
           <CardHeader>
@@ -168,14 +166,9 @@ export default async function PhotoPage() {
                     bankName: "BCA",
                     accountNumber: "4490380731",
                     accountHolder: "Dippo Haryo Satriyo Ditho"
-                  },
-                  {
-                    bankName: "Mandiri",
-                    accountNumber: "1610015784197",
-                    accountHolder: "Rihhadatul Aisy"
                   }
                 ]}
-              price="Rp7.500.000"
+              price="Rp50.000"
               uploadAction={updateBilling}
             />
         )}

@@ -6,23 +6,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, Search, FileText, Download, Loader2, Send, Trash2, Check, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, FileText, Download, Loader2, Send, Trash2, Check, X, Link as LinkIcon, AlignLeft } from "lucide-react";
 import { toast } from "sonner";
-import { getSignedDocUrl, updateMCStatus } from "@/actions/server/admin_mc";
-import { MCMemberManager } from "./McMemberManager";
-import { MCTeam } from "@/actions/types/Admin";
+import { getSignedDocUrl, updateHackStatus } from "@/actions/server/admin_hackathon";
+import { HackMemberManager } from "./HackMemberManager";
+import { HackTeam } from "@/actions/types/Admin";
 
 const getTeamStatusBadge = (status: number) => {
     switch(status) {
-        case 4: return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20">Accepted</Badge>;
-        case 3: return <Badge variant="outline" className="text-purple-400 border-purple-500/30 bg-purple-500/10">Waitlisted</Badge>;
-        case 2: return <Badge variant="outline" className="text-blue-400 border-blue-500/30 bg-blue-500/10">Wait Payment</Badge>;
-        case 1: return <Badge variant="outline" className="text-amber-400 border-amber-500/30 bg-amber-500/10">Wait Docs</Badge>;
-        default: return <Badge variant="outline" className="text-zinc-500 border-zinc-700">Verif. Team</Badge>;
+        case 3: return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20">Accepted</Badge>;
+        case 2: return <Badge variant="outline" className="text-purple-400 border-purple-500/30 bg-purple-500/10">Wait Submission</Badge>;
+        case 1: return <Badge variant="outline" className="text-blue-400 border-blue-500/30 bg-blue-500/10">Wait Payment</Badge>;
+        case 0: return <Badge variant="outline" className="text-amber-400 border-amber-500/30 bg-amber-500/10">Wait Team Verif</Badge>;
+        default: return <Badge variant="outline" className="text-zinc-500 border-zinc-700">Unknown ({status})</Badge>;
     }
 };
 
-export function MCDataTable({ data }: { data: MCTeam[] }) {
+export function HackDataTable({ data }: { data: HackTeam[] }) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function MCDataTable({ data }: { data: MCTeam[] }) {
 
   const handleUpdateTeamStatus = async (teamId: string, value: string) => {
       setUpdatingStatus(true);
-      const res = await updateMCStatus(teamId, 'team', 'status', Number(value));
+      const res = await updateHackStatus(teamId, 'team', 'status', Number(value));
       setUpdatingStatus(false);
       if(res.success) toast.success("Team status updated");
       else toast.error("Update failed");
@@ -54,17 +54,17 @@ export function MCDataTable({ data }: { data: MCTeam[] }) {
   const handleAddNote = async (teamId: string, formData: FormData) => {
       const note = formData.get('note') as string;
       if(!note) return;
-      await updateMCStatus(teamId, 'team', 'notes', note, 'update');
+      await updateHackStatus(teamId, 'team', 'notes', note, 'update');
       toast.success("Note added");
   };
 
   const handleDeleteNote = async (teamId: string, note: string) => {
-      await updateMCStatus(teamId, 'team', 'notes', note, 'remove_note');
+      await updateHackStatus(teamId, 'team', 'notes', note, 'remove_note');
       toast.success("Note deleted");
   };
 
   const handleVerifyTeamDoc = async (teamId: string, field: string, value: number) => {
-      await updateMCStatus(teamId, 'team', field, value);
+      await updateHackStatus(teamId, 'team', field, value);
       toast.success("Doc status updated");
   }
 
@@ -106,6 +106,7 @@ export function MCDataTable({ data }: { data: MCTeam[] }) {
         </div>
     </div>
   );
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -149,34 +150,30 @@ export function MCDataTable({ data }: { data: MCTeam[] }) {
                     <TableCell className="font-medium text-zinc-200 text-base">{team.name}</TableCell>
                     <TableCell className="font-mono text-zinc-500 text-xs">{team.code}</TableCell>
                     
-                    {/* Status Column */}
-                    <TableCell>
-                       {getTeamStatusBadge(team.status)}
-                    </TableCell>
+                    <TableCell>{getTeamStatusBadge(team.status)}</TableCell>
 
                     <TableCell>
-                       {team.pp_verified === 1 ? <Badge className="bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20">Paid</Badge> 
-                       : team.pp_verified === 2 ? <Badge className="bg-red-500/15 text-red-400 hover:bg-red-500/20 border-red-500/20">Rejected</Badge> 
+                       {team.pp_verified === 2 ? <Badge className="bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20">Paid</Badge> 
+                       : team.pp_verified === 1 ? <Badge className="bg-red-500/15 text-red-400 hover:bg-red-500/20 border-red-500/20">Rejected</Badge> 
                        : <Badge variant="outline" className="text-zinc-500 border-zinc-700">Check</Badge>}
                     </TableCell>
 
                     <TableCell className="text-right">
-                       <Badge variant="secondary" className="bg-zinc-800 text-zinc-400">{team.members.length}</Badge>
+                       <Badge variant="secondary" className="bg-zinc-800 text-zinc-400">{team.members.length} / {team.count}</Badge>
                     </TableCell>
                   </TableRow>
                   
                   {expandedRows.has(team.team_id) && (
                     <TableRow className="bg-black border-b border-zinc-800 hover:bg-black">
                       <TableCell colSpan={6} className="p-0">
-                        <div className="p-6 border-l-2 border-emerald-600 bg-zinc-950/30 shadow-inner">
+                        <div className="p-6 border-l-2 border-blue-600 bg-zinc-950/30 shadow-inner">
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                 
                                 {/* LEFT: Team Admin */}
                                 <div className="lg:col-span-4 space-y-6">
                                     
-                                    {/* 1. STATUS CHANGER */}
                                     <div className="p-4 rounded-lg bg-zinc-900/50 border border-zinc-800">
-                                        <h4 className="text-xs font-bold uppercase text-zinc-500 mb-2">Change Team Status</h4>
+                                        <h4 className="text-xs font-bold uppercase text-zinc-500 mb-2">Change Status</h4>
                                         <Select 
                                           disabled={updatingStatus} 
                                           value={String(team.status)} 
@@ -187,23 +184,46 @@ export function MCDataTable({ data }: { data: MCTeam[] }) {
                                           </SelectTrigger>
                                           <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
                                             <SelectItem value="0">0 - Wait Team Verif</SelectItem>
-                                            <SelectItem value="1">1 - Wait Core Docs</SelectItem>
-                                            <SelectItem value="2">2 - Wait Payment</SelectItem>
-                                            <SelectItem value="3">3 - Waitlisted</SelectItem>
-                                            <SelectItem value="4">4 - Accepted</SelectItem>
+                                            <SelectItem value="1">1 - Wait Payment</SelectItem>
+                                            <SelectItem value="2">2 - Wait Submission</SelectItem>
+                                            <SelectItem value="3">3 - Accepted</SelectItem>
                                           </SelectContent>
                                         </Select>
                                     </div>
 
-                                    {/* Documents */}
                                     <div className="space-y-2">
                                         <h4 className="text-xs font-bold uppercase text-zinc-500 flex items-center gap-2 mb-3"><FileText className="h-3 w-3" /> Team Files</h4>
                                         <TeamDocRow label="Proof of Payment" link={team.pp_link} verified={team.pp_verified} field="pp_verified" teamId={team.team_id} />
-                                        <TeamDocRow label="Statement Letter" link={team.sp_link} verified={team.sp_verified} field="sp_verified" teamId={team.team_id} />
-                                        <TeamDocRow label="Originality Letter" link={team.ol_link} verified={team.ol_verified} field="ol_verified" teamId={team.team_id} />
+                                        
                                         <div className="my-2 border-t border-zinc-800/50"></div>
-                                        <TeamDocRow label="Health Documents " link={team.hd_link} verified={team.hd_verified} field="hd_verified" teamId={team.team_id} />
-                                        <TeamDocRow label="Team Assignmenet Document" link={team.td_link} verified={team.td_verified} field="td_verified" teamId={team.team_id} />
+                                        
+                                        {/* SUBMISSION SECTION */}
+                                        <div className="bg-zinc-900/20 p-3 rounded border border-zinc-800/50">
+                                            <div className="flex items-center gap-2 mb-2 text-blue-400">
+                                                <AlignLeft className="h-3 w-3" />
+                                                <h5 className="text-[10px] font-bold uppercase">Submission</h5>
+                                            </div>
+                                            
+                                            {/* 1. Description */}
+                                            <div className="mb-3 p-2.5 bg-black rounded border border-zinc-800 text-xs text-zinc-300 max-h-32 overflow-y-auto custom-scrollbar whitespace-pre-wrap leading-relaxed">
+                                                {team.sdd ? team.sdd : <span className="text-zinc-600 italic">No description submitted yet.</span>}
+                                            </div>
+                                            
+                                            {/* 2. External Links (GitHub etc) */}
+                                            {team.ext_link && team.ext_link.length > 0 && (
+                                                <div className="flex flex-col gap-1 mb-3">
+                                                    {team.ext_link.map((link, i) => (
+                                                        <a key={i} href={link} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 bg-zinc-900 border border-zinc-800 rounded hover:bg-zinc-800 transition-colors text-xs text-blue-400">
+                                                            <LinkIcon className="h-3 w-3" />
+                                                            <span className="truncate">{link}</span>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* 3. Document */}
+                                            <TeamDocRow label="Submission File" link={team.sd_link} verified={team.sub_verified} field="sub_verified" teamId={team.team_id} />
+                                        </div>
                                     </div>
 
                                     {/* Notes */}
@@ -229,7 +249,7 @@ export function MCDataTable({ data }: { data: MCTeam[] }) {
                                     <h4 className="text-xs font-bold uppercase text-zinc-500 mb-4">Team Members</h4>
                                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                         {team.members.map((m) => (
-                                            <MCMemberManager key={m.account_id} member={m}/>
+                                            <HackMemberManager key={m.account_id} member={m} />
                                         ))}
                                     </div>
                                 </div>

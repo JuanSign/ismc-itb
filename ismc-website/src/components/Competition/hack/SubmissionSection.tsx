@@ -4,7 +4,6 @@ import React, { useState, useActionState, useEffect } from "react";
 import { submitProject } from "@/actions/server/hackathon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -66,7 +65,6 @@ export function SubmissionSection({
   // Form State
   const [title, setTitle] = useState(parsed.title);
   const [theme, setTheme] = useState(parsed.theme);
-  const [description, setDescription] = useState(parsed.desc);
 
   const [state, action, isPending] = useActionState(submitProject, initialState);
 
@@ -155,24 +153,12 @@ export function SubmissionSection({
                     </Select>
                 </div>
 
-                {/* Description */}
-                <div className="space-y-2">
-                    <Label>Description / Abstract</Label>
-                    <Textarea 
-                        placeholder="Describe your project, objectives, and solution..." 
-                        className="min-h-[150px]"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        required
-                    />
-                </div>
-
                 {/* HIDDEN INPUT: Merges Title, Theme, and Desc for the Server Action */}
                 {/* Format: [Title][Theme]Description */}
                 <input 
                     type="hidden" 
                     name="submission_desc" 
-                    value={`[${title}][${theme}]${description}`} 
+                    value={`[${title}][${theme}`} 
                 />
 
                 {/* File Upload */}

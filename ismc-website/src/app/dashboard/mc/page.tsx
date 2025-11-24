@@ -15,6 +15,7 @@ import { TeamStatusBadge } from "@/components/Competition/mc/TeamStatusBadge";
 // Actions
 import { updateBilling } from "@/actions/server/mc";
 import { getTeamPageData, leaveTeam } from "@/actions/server/mc";
+import { Toaster } from "sonner";
 
 // --- Helper: Initials ---
 function getInitials(name: string | null, email: string) {
@@ -58,7 +59,7 @@ export default async function TeamPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
-        
+        <Toaster richColors/>
         {/* --- STEP 1: TEAM INFO --- */}
         <Card className={`border-l-4 border-l-blue-500 ${GLASS_CARD}`}>
           <CardHeader>

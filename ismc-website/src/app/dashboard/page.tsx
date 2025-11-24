@@ -40,6 +40,8 @@ export default async function CompetitionPage() {
   const lockMessage = "You must choose between Mining Competition or Mining Insight.";
 
   const glassCardClass = "bg-slate-950/70 backdrop-blur-md border-white/10 text-slate-100 shadow-2xl";
+  
+  const downloadBtnClass = "border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200";
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -75,14 +77,14 @@ export default async function CompetitionPage() {
               </p>
             </CardContent>
             <CardFooter className="flex flex-wrap gap-3 justify-end">
-              <Button variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
+              <Button variant="outline" className={downloadBtnClass} asChild>
                 <a href={`${process.env.NEXT_PUBLIC_CDN_URL}/mc/booklet_mc.pdf`} target="_blank" rel="noopener noreferrer">
                    <Download className="mr-2 h-4 w-4" />
                    Booklet
                 </a>
               </Button>
 
-              <Button variant="outline" className="border-white/20 bg-transparent hover:bg-white/10 hover:text-white text-slate-200" asChild>
+              <Button variant="outline" className={downloadBtnClass} asChild>
                 <Link href="/dashboard/mc/details">Show More</Link>
               </Button>
               
@@ -139,7 +141,15 @@ export default async function CompetitionPage() {
                       Scientific writing competition combining business cases with academic mining studies.
                     </p>
                     <p className="text-sm font-medium text-yellow-400">Open to teams of 1-3 participants.</p>
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {/* Paper Booklet Button */}
+                      <Button variant="outline" size="sm" className={downloadBtnClass} asChild>
+                        <a href={`${process.env.NEXT_PUBLIC_CDN_URL}/paper/booklet_paper.pdf`} target="_blank" rel="noopener noreferrer">
+                           <Download className="mr-2 h-4 w-4" />
+                           Booklet
+                        </a>
+                      </Button>
+                      
                       <div className="brightness-110">
                         <CompetitionEntry 
                             title="Paper Competition"
@@ -167,7 +177,15 @@ export default async function CompetitionPage() {
                       Innovation-based team competition using Industry 4.0 technology to solve real-world mining problems.
                     </p>
                     <p className="text-sm font-medium text-yellow-400">Open to teams of 3-5 participants.</p>
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {/* Hackathon Booklet Button */}
+                      <Button variant="outline" size="sm" className={downloadBtnClass} asChild>
+                        <a href={`${process.env.NEXT_PUBLIC_CDN_URL}/hack/booklet_hack.pdf`} target="_blank" rel="noopener noreferrer">
+                           <Download className="mr-2 h-4 w-4" />
+                           Booklet
+                        </a>
+                      </Button>
+
                       <div className="brightness-110">
                         <CompetitionEntry 
                             title="Hackathon"
@@ -195,7 +213,15 @@ export default async function CompetitionPage() {
                       Visually communicate complex engineering concepts through creative design.
                     </p>
                     <p className="text-sm font-medium text-yellow-400">Individual Competition (1 Participant).</p>
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {/* Poster Booklet Button */}
+                      <Button variant="outline" size="sm" className={downloadBtnClass} asChild>
+                        <a href={`${process.env.NEXT_PUBLIC_CDN_URL}/poster/booklet_poster.pdf`} target="_blank" rel="noopener noreferrer">
+                           <Download className="mr-2 h-4 w-4" />
+                           Booklet
+                        </a>
+                      </Button>
+
                       <div className="brightness-110">
                         <PersonalEntry 
                             title="Poster Competition"
@@ -221,7 +247,15 @@ export default async function CompetitionPage() {
                       Capture broad earth science perspectives and present visual works that tell a story.
                     </p>
                     <p className="text-sm font-medium text-yellow-400">Individual Competition (1 Participant).</p>
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {/* Photo Booklet Button */}
+                      <Button variant="outline" size="sm" className={downloadBtnClass} asChild>
+                        <a href={`${process.env.NEXT_PUBLIC_CDN_URL}/photo/booklet_photo.pdf`} target="_blank" rel="noopener noreferrer">
+                           <Download className="mr-2 h-4 w-4" />
+                           Booklet
+                        </a>
+                      </Button>
+
                       <div className="brightness-110">
                         <PersonalEntry 
                             title="Photo Competition"

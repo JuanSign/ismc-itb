@@ -13,6 +13,7 @@ import { MemberDialog } from "@/components/Competition/poster/MemberDialog";
 import { PaymentSection } from "@/components/Competition/general/PaymentSection";
 import { PosterSubmissionSection } from "@/components/Competition/poster/SubmissionSection";
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
+import { Toaster } from "sonner";
 
 // --- SHARED GLASS STYLE ---
 const GLASS_CARD = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
@@ -89,17 +90,13 @@ export default async function PosterPage() {
   
   const status = member.status ?? 0;
 
-  // Strict Locking Logic
-  const isDocsVerified = member.sc_verified === 2 && member.fp_verified === 2;
-  const isPaymentVerified = member.pp_verified === 2;
-
-  const isPaymentLocked = !isDocsVerified;
-  const isSubmissionLocked = !isPaymentVerified;
+  const isPaymentLocked = status < 1;
+  const isSubmissionLocked = status < 2;
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
-        
+        <Toaster richColors/>
         {/* --- STEP 1: PARTICIPANT INFO --- */}
         <Card className={`border-l-4 border-l-blue-600 ${GLASS_CARD}`}>
           <CardHeader>
@@ -185,14 +182,9 @@ export default async function PosterPage() {
                     bankName: "BCA",
                     accountNumber: "4490380731",
                     accountHolder: "Dippo Haryo Satriyo Ditho"
-                  },
-                  {
-                    bankName: "Mandiri",
-                    accountNumber: "1610015784197",
-                    accountHolder: "Rihhadatul Aisy"
                   }
                 ]}
-              price="Rp7.500.000"
+              price="Rp75.000"
               uploadAction={updateBilling}
             />
         )}
