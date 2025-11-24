@@ -43,6 +43,8 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
   }
   const { email, password } = result.data;
 
+  let redirectTo = '/dashboard';
+
   try {
     const account = await getAccountByEmail(email);
     
@@ -68,19 +70,22 @@ export async function login(prevState: AuthState, formData: FormData): Promise<A
         error: 'Please check your email to verify your account.' 
       };
     }
-
+    const isAdmin = account.ADMIN === true;
     await createSession({
       account_id: account.account_id,
       email: account.email,
       events: account.events || [],
+      is_admin: isAdmin,
     });
-
+    if (isAdmin) {
+      redirectTo = '/admin';
+    }
   } catch (error) {
     console.error('Login Error:', error);
     return { success: false, error: 'Something went wrong.' };
   }
 
-  redirect('/dashboard');
+  redirect(redirectTo);
 }
 
 export async function logout() {

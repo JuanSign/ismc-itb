@@ -2,12 +2,13 @@ import 'server-only';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getAccountByID} from '../database/account';
+import { getAccountByID } from '@/actions/database/account';
 
 export type SessionPayload = {
   account_id: string;
   email: string;
   events: string[];
+  is_admin: boolean;
   expiresAt: Date;
 };
 
@@ -65,6 +66,7 @@ export async function refreshSession(account_id: string) {
     account_id: user.account_id,
     email: user.email,
     events: user.events || [], 
+    is_admin: user.ADMIN || false,
   };
 
   await createSession(sessionPayload);

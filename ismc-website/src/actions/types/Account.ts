@@ -5,4 +5,5 @@ export type Account = {
   events: string[] | null
   created_at: Date
   verified_at: Date | null
+  ADMIN: boolean
 }
