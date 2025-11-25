@@ -36,7 +36,7 @@ export async function addMemberToTeam(teamId: string, accountId: string, email: 
         SELECT ${teamId}, ${accountId}, ${email}, 'MEMBER'
         WHERE (
             SELECT count FROM mc_team WHERE team_id = ${teamId}
-        ) < 7
+        ) < 8
         RETURNING account_id
     `;
 

@@ -114,7 +114,7 @@ export async function joinTeam(
         console.error("Join team error:", e);
         
         if (e instanceof Error && e.message === "TEAM_FULL") {
-            return { error: "This team has reached the maximum of 7 members." };
+            return { error: "This team has reached the maximum of 8 members." };
         }
 
         if (e instanceof NeonDbError && e.code === '23505') { 
