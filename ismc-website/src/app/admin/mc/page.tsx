@@ -1,10 +1,13 @@
 import { getMiningCompetitionData } from "@/actions/database/admin_mc";
 import { verifySession } from "@/actions/server/session";
 import { MCDataTable } from "@/components/admin/McDataTable";
+import { RefreshBtn } from "@/components/admin/RefreshBtn";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic"; 
 
 export default async function MCAdminPage() {
   const session = await verifySession();
@@ -30,6 +33,9 @@ export default async function MCAdminPage() {
               <p className="text-zinc-500 mt-1">
                 Manage <span className="text-emerald-400 font-mono">{data.length}</span> registered teams
               </p>
+            </div>
+            <div>
+              <RefreshBtn />
             </div>
           </div>
         </div>

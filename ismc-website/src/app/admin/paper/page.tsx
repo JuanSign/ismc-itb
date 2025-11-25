@@ -1,8 +1,11 @@
 import { getPaperCompetitionData } from "@/actions/server/admin_paper";
 import { PaperDataTable } from "@/components/admin/PaperDataTable";
+import { RefreshBtn } from "@/components/admin/RefreshBtn";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic"; 
 
 export default async function PaperAdminPage() {
   const data = await getPaperCompetitionData();
@@ -23,6 +26,9 @@ export default async function PaperAdminPage() {
               <p className="text-zinc-500 mt-1">
                 Manage <span className="text-purple-400 font-mono">{data.length}</span> registered teams
               </p>
+            </div>
+            <div>
+              <RefreshBtn />
             </div>
           </div>
         </div>

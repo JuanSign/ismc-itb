@@ -3,6 +3,9 @@ import { HackDataTable } from "@/components/admin/HackDataTable";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { RefreshBtn } from "@/components/admin/RefreshBtn";
+
+export const dynamic = "force-dynamic"; 
 
 export default async function HackathonAdminPage() {
   const data = await getHackathonData();
@@ -24,6 +27,11 @@ export default async function HackathonAdminPage() {
                 Manage <span className="text-blue-400 font-mono">{data.length}</span> registered teams
               </p>
             </div>
+            
+            <div>
+                <RefreshBtn />
+            </div>
+
           </div>
         </div>
 

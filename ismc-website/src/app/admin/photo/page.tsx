@@ -1,8 +1,11 @@
 import { getPhotoData } from "@/actions/server/admin_photo";
 import { PhotoDataTable } from "@/components/admin/PhotoDataTable";
+import { RefreshBtn } from "@/components/admin/RefreshBtn";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic"; 
 
 export default async function PhotoAdminPage() {
   const data = await getPhotoData();
@@ -23,6 +26,9 @@ export default async function PhotoAdminPage() {
               <p className="text-zinc-500 mt-1">
                 Manage <span className="text-pink-400 font-mono">{data.length}</span> participants
               </p>
+            </div>
+            <div>
+              <RefreshBtn />
             </div>
           </div>
         </div>

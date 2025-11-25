@@ -1,8 +1,11 @@
 import { getPosterData } from "@/actions/server/admin_poster";
 import { PosterDataTable } from "@/components/admin/PosterDataTable";
+import { RefreshBtn } from "@/components/admin/RefreshBtn";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic"; 
 
 export default async function PosterAdminPage() {
   const data = await getPosterData();
@@ -23,6 +26,9 @@ export default async function PosterAdminPage() {
               <p className="text-zinc-500 mt-1">
                 Manage <span className="text-green-400 font-mono">{data.length}</span> solo participants
               </p>
+            </div>
+            <div>
+              <RefreshBtn />
             </div>
           </div>
         </div>
