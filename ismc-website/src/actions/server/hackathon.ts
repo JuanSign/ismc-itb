@@ -5,7 +5,8 @@ import {
     JoinTeamFormState, joinTeamSchema, 
     UpdateMemberFormState,
     UpdateBillingFormState, 
-    SubmitProjectFormState
+    SubmitProjectFormState,
+    MemberHack // <--- Added this import
 } from "../types/Hackathon";
 import { refreshSession, verifySession } from "./session";
 import { DB } from "@/lib/DB";
@@ -148,6 +149,7 @@ export async function leaveTeam() {
     redirect("/dashboard");
 }
 
+// --- 4. FETCH PAGE DATA ---
 export async function getTeamPageData() {
     const session = await verifySession();
     if (!session) redirect("/");
@@ -158,7 +160,12 @@ export async function getTeamPageData() {
         
         // Sign Member Docs
         for (const member of data.members) {
-            if(member.sc_link) member.sc_link = await getSignedUrlForR2(member.sc_link);
+            // !!! IMPORTANT FIX !!!
+            // We removed sc_link signing here to prevent NetworkError (payload too large).
+            // This is now handled in 'getMemberDocuments' when the dialog opens.
+            // if(member.sc_link) member.sc_link = await getSignedUrlForR2(member.sc_link);
+            
+            // We keep fp_link (photo) because it is small and needed for the Avatar.
             if(member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
         }
 
@@ -175,6 +182,30 @@ export async function getTeamPageData() {
     }
 }
 
+// --- 5. NEW: FETCH SINGLE MEMBER DOCS (For Dialog) ---
+export async function getMemberDocuments(targetAccountId: string) {
+    const session = await verifySession();
+    if (!session) return null;
+
+    try {
+        // Fetch fresh data for this specific member
+        const result = await DB`SELECT * FROM hack_member WHERE account_id = ${targetAccountId}`;
+        if (result.length === 0) return null;
+        
+        const member = result[0];
+
+        // NOW we sign the heavy documents on demand
+        if (member.sc_link) member.sc_link = await getSignedUrlForR2(member.sc_link);
+        if (member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
+
+        return member as MemberHack;
+    } catch (error) {
+        console.error("Error fetching member docs:", error);
+        return null;
+    }
+}
+
+// --- 6. UPDATE MEMBER TEXT DETAILS ---
 export async function updateMemberDetails(
     prevState: UpdateMemberFormState,
     formData: FormData
@@ -189,11 +220,10 @@ export async function updateMemberDetails(
         const phoneNum = formData.get("phone_num") as string;
         const idNo = formData.get("id_no") as string;
         
-        const scFile = formData.get("sc_link") as File;
-        const fpFile = formData.get("fp_link") as File;
-
-        const scKey = (scFile && scFile.size > 0) ? await uploadFileToR2(scFile, "hack-sc", account_id) : null;
-        const fpKey = (fpFile && fpFile.size > 0) ? await uploadFileToR2(fpFile, "hack-fp", account_id) : null;
+        // Note: Files are now uploaded via 'uploadMemberDocument', 
+        // so we don't process them here anymore, but we keep keys null just in case.
+        const scKey = null; 
+        const fpKey = null;
 
         await updateMember(account_id, name, institution, phoneNum, idNo, scKey, fpKey);
 
@@ -205,6 +235,38 @@ export async function updateMemberDetails(
     }
 }
 
+// --- 7. NEW: UPLOAD SINGLE FILE ---
+export async function uploadMemberDocument(
+    targetAccountId: string,
+    docType: 'sc' | 'fp',
+    formData: FormData
+) {
+    const session = await verifySession();
+    if (!session) return { error: "Not authenticated" };
+    
+    try {
+        const file = formData.get("file") as File;
+        if (!file || file.size === 0) return { error: "No file provided" };
+
+        const keyPrefix = docType === 'sc' ? 'hack-sc' : 'hack-fp';
+        const fileKey = await uploadFileToR2(file, keyPrefix, targetAccountId);
+
+        if (docType === 'sc') {
+            await DB`UPDATE hack_member SET sc_link = ${fileKey}, sc_verified = 0 WHERE account_id = ${targetAccountId}`;
+        } else {
+            await DB`UPDATE hack_member SET fp_link = ${fileKey}, fp_verified = 0 WHERE account_id = ${targetAccountId}`;
+        }
+
+        revalidatePath("/dashboard/hackathon");
+        return { success: true, message: "File uploaded successfully" };
+
+    } catch (e) {
+        console.error("Upload error:", e);
+        return { error: "Upload failed" };
+    }
+}
+
+// --- 8. BILLING ---
 export async function updateBilling(
     prevState: UpdateBillingFormState,
     formData: FormData
@@ -227,6 +289,7 @@ export async function updateBilling(
     } catch { return { error: "Error uploading payment proof." }; }
 }
 
+// --- 9. SUBMISSION ---
 export async function submitProject(
     prevState: SubmitProjectFormState,
     formData: FormData

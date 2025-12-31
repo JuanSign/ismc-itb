@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, useRef } from "react";
+import { useActionState, useEffect, useState, useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,10 +17,9 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Eye, Pencil, Hourglass, XCircle, CheckCircle2, Loader2, Info, ScrollText } from "lucide-react";
 import { MemberHack, UpdateMemberFormState } from "@/actions/types/Hackathon";
-import { updateMemberDetails } from "@/actions/server/hackathon";
-import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
+import { updateMemberDetails, getMemberDocuments, uploadMemberDocument } from "@/actions/server/hackathon";
+import { CustomFileInput } from "./CustomFileInput";
 
-// --- Helper: Status Badge (Dark Mode) ---
 function VerificationStatusBadge({ status }: { status: number }) {
   const config = {
     0: { text: "Waiting", icon: <Hourglass className="h-3 w-3" />, className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
@@ -39,7 +38,7 @@ function VerificationStatusBadge({ status }: { status: number }) {
 const initialState: UpdateMemberFormState = {};
 
 export function TeamMemberDialog({
-  member,
+  member: initialMember,
   isCurrentUser,
 }: {
   member: MemberHack;
@@ -47,7 +46,25 @@ export function TeamMemberDialog({
 }) {
   const [open, setOpen] = useState(false);
   const hasHandledSuccess = useRef(false);
+  const [member, setMember] = useState<MemberHack>(initialMember);
+  const [isLoadingDocs, startTransition] = useTransition();
   const [state, action, isPending] = useActionState(updateMemberDetails, initialState);
+
+  useEffect(() => {
+    if (open) {
+      hasHandledSuccess.current = false;
+      startTransition(async () => {
+        try {
+          const freshData = await getMemberDocuments(initialMember.account_id);
+          if (freshData) {
+            setMember(freshData);
+          }
+        } catch {
+          toast.error("Failed to load documents.");
+        }
+      });
+    }
+  }, [open, initialMember]);
 
   useEffect(() => {
     if (state?.error) toast.error(state.error);
@@ -58,16 +75,36 @@ export function TeamMemberDialog({
     }
   }, [state]);
 
-  useEffect(() => {
-    if (open) hasHandledSuccess.current = false;
-  }, [open]);
+  const handleFileUpload = async (file: File, docType: 'sc' | 'fp') => {
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const result = await uploadMemberDocument(member.account_id, docType, formData);
 
-  // --- Styles ---
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("File uploaded successfully");
+      const freshData = await getMemberDocuments(member.account_id);
+      if (freshData) setMember(freshData);
+    }
+  };
+
   const inputClass = "bg-black/20 border-white/10 text-slate-200 placeholder:text-slate-500 focus-visible:ring-blue-500/50";
   const labelClass = "text-slate-300";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    // FIX 2: Handle the reset logic here in the event handler instead of useEffect
+    <Dialog 
+      open={open} 
+      onOpenChange={(val) => {
+        setOpen(val);
+        // When closing, reset the form state back to initial props
+        if (!val) {
+          setMember(initialMember);
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="border-white/10 bg-transparent hover:bg-white/10 text-slate-300 hover:text-white">
           {isCurrentUser ? <Pencil className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -78,7 +115,6 @@ export function TeamMemberDialog({
         className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-slate-950 border-white/10 text-slate-100 shadow-2xl"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        {/* Header */}
         <div className="p-6 pb-4 border-b border-white/10">
           <DialogHeader>
             <DialogTitle className="text-white">
@@ -90,12 +126,16 @@ export function TeamMemberDialog({
           </DialogHeader>
         </div>
         
-        {/* Scrollable Form Content */}
         <div className="flex-1 overflow-y-auto p-6">
+            {isLoadingDocs && (
+                 <div className="mb-4 flex items-center gap-2 text-xs text-blue-400 bg-blue-500/10 p-2 rounded border border-blue-500/20">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Loading latest documents...
+                 </div>
+            )}
+            
             <form id="update-hack-member-form" action={action} className="h-full">
               <FieldGroup className="flex flex-col gap-8">
                 
-                {/* Section 1: Personal Information */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                     <span className="bg-blue-500/20 text-blue-300 border border-blue-500/30 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
@@ -121,7 +161,6 @@ export function TeamMemberDialog({
                   </div>
                 </div>
 
-                {/* Section 2: Documents */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                     <span className="bg-blue-500/20 text-blue-300 border border-blue-500/30 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
@@ -133,19 +172,30 @@ export function TeamMemberDialog({
                             <FieldLabel className={labelClass}>ID Card</FieldLabel>
                             <VerificationStatusBadge status={member.sc_verified} />
                         </div>
-                        <CustomFileInput name="sc_link" accept=".pdf,.jpg,.png" currentFileUrl={member.sc_link} disabled={!isCurrentUser} />
+                        <CustomFileInput 
+                            name="sc_link_ignore" 
+                            accept=".pdf,.jpg,.png" 
+                            currentFileUrl={member.sc_link} 
+                            disabled={!isCurrentUser} 
+                            onUpload={(file) => handleFileUpload(file, 'sc')}
+                        />
                     </Field>
                     <Field>
                         <div className="flex justify-between items-center mb-2">
                             <FieldLabel className={labelClass}>Formal Photo</FieldLabel>
                             <VerificationStatusBadge status={member.fp_verified} />
                         </div>
-                        <CustomFileInput name="fp_link" accept=".jpg,.png" currentFileUrl={member.fp_link} disabled={!isCurrentUser} />
+                        <CustomFileInput 
+                            name="fp_link_ignore" 
+                            accept=".jpg,.png" 
+                            currentFileUrl={member.fp_link} 
+                            disabled={!isCurrentUser} 
+                            onUpload={(file) => handleFileUpload(file, 'fp')}
+                        />
                     </Field>
                   </div>
                 </div>
 
-                {/* Section 3: Notes (Conditionally Rendered) */}
                 {member.notes && member.notes.length > 0 && (
                     <div className="mt-4 pt-6 border-t border-white/10">
                     <div className="flex items-center gap-2 mb-4">
@@ -174,7 +224,6 @@ export function TeamMemberDialog({
             </form>
         </div>
         
-        {/* Footer */}
         <div className="p-6 pt-4 border-t border-white/10 bg-slate-950 mt-auto">
           {isCurrentUser ? (
             <DialogFooter>
