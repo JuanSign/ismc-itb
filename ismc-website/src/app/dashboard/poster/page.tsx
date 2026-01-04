@@ -184,7 +184,7 @@ export default async function PosterPage() {
                     accountHolder: "Dippo Haryo Satriyo Ditho"
                   }
                 ]}
-              price="Rp75.000"
+              price="Rp100.000"
               uploadAction={updateBilling}
             />
         )}

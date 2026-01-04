@@ -153,7 +153,7 @@ export default async function PaperTeamPage() {
                     accountHolder: "Dippo Haryo Satriyo Ditho"
                   },
                 ]}
-              price="Rp150.000"
+              price="Rp200.000"
               uploadAction={updateBilling}
             />
         )}

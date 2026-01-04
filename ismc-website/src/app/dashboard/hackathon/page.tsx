@@ -212,7 +212,7 @@ export default async function HackathonTeamPage() {
                     accountHolder: "Dippo Haryo Satriyo Ditho"
                   }
                 ]}
-              price="Rp200.000"
+              price="Rp220.000"
               uploadAction={updateBilling}
             />
         )}

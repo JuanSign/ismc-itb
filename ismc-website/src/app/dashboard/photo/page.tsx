@@ -168,7 +168,7 @@ export default async function PhotoPage() {
                     accountHolder: "Dippo Haryo Satriyo Ditho"
                   }
                 ]}
-              price="Rp50.000"
+              price="Rp60.000"
               uploadAction={updateBilling}
             />
         )}
