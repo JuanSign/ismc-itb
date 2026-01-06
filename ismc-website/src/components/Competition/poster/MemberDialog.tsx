@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +10,10 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Pencil, Hourglass, XCircle, CheckCircle2, Loader2, ScrollText, Info } from "lucide-react";
-import { PosterMember, UpdateMemberFormState } from "@/actions/types/Poster";
-import { updateMemberDetails } from "@/actions/server/poster";
-import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
+import { PosterMember } from "@/actions/types/Poster";
+import { updateMemberDetails, getMemberDocuments, uploadMemberDocument } from "@/actions/server/poster";
+import { AtomicFileInput } from "@/components/CustomFileInput/AtomicFileInput";
 
-// --- Helper: Status Badge (Dark Mode) ---
 function VerificationStatusBadge({ status }: { status: number }) {
   const config = {
     0: { text: "Waiting", icon: <Hourglass className="h-3 w-3" />, className: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
@@ -30,30 +29,92 @@ function VerificationStatusBadge({ status }: { status: number }) {
   );
 }
 
-const initialState: UpdateMemberFormState = {};
-
-export function MemberDialog({ member }: { member: PosterMember }) {
+export function MemberDialog({ member: initialMember }: { member: PosterMember }) {
   const [open, setOpen] = useState(false);
   const hasHandledSuccess = useRef(false);
-  const [state, action, isPending] = useActionState(updateMemberDetails, initialState);
+  const [member, setMember] = useState<PosterMember>(initialMember);
+
+  const [scFile, setScFile] = useState<File | null>(null);
+  const [fpFile, setFpFile] = useState<File | null>(null);
+
+  const [isLoadingDocs, startTransition] = useTransition();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string>("Save Details");
 
   useEffect(() => {
-    if (state?.error) toast.error(state.error);
-    if (state?.message && !hasHandledSuccess.current) {
-      toast.success(state.message);
-      hasHandledSuccess.current = true; 
-      setTimeout(() => setOpen(false), 0);
+    if (open) {
+      setScFile(null);
+      setFpFile(null);
+      hasHandledSuccess.current = false;
+      startTransition(async () => {
+        try {
+          const freshData = await getMemberDocuments(initialMember.account_id);
+          if (freshData) setMember(freshData);
+        } catch {
+          toast.error("Failed to load documents.");
+        }
+      });
     }
-  }, [state]);
+  }, [open, initialMember]);
 
-  useEffect(() => { if (open) hasHandledSuccess.current = false; }, [open]);
+  const handleSmartSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSaving(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const accountId = member.account_id;
 
-  // --- Styles ---
-  const inputClass = "bg-black/20 border-white/10 text-slate-200 placeholder:text-slate-500 focus-visible:ring-green-500/50"; // Green accent for Poster
+    try {
+      if (scFile) {
+        setSaveStatus("Uploading Student Card...");
+        const scData = new FormData();
+        scData.append("file", scFile);
+        const res = await uploadMemberDocument(accountId, 'sc', scData);
+        if (res.error) throw new Error("Student Card upload failed");
+      }
+
+      if (fpFile) {
+        setSaveStatus("Uploading Photo...");
+        const fpData = new FormData();
+        fpData.append("file", fpFile);
+        const res = await uploadMemberDocument(accountId, 'fp', fpData);
+        if (res.error) throw new Error("Photo upload failed");
+      }
+
+      setSaveStatus("Saving Details...");
+      
+      formData.delete("sc_link_ignore");
+      formData.delete("fp_link_ignore");
+
+      const result = await updateMemberDetails({}, formData);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      toast.success("All details saved successfully");
+      setOpen(false);
+      
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred");
+    } finally {
+      setIsSaving(false);
+      setSaveStatus("Save Details");
+    }
+  };
+
+  const inputClass = "bg-black/20 border-white/10 text-slate-200 placeholder:text-slate-500 focus-visible:ring-green-500/50";
   const labelClass = "text-slate-300";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(val) => {
+        setOpen(val);
+        if (!val) setMember(initialMember);
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="border-white/10 bg-transparent hover:bg-white/10 text-slate-300 hover:text-white">
             <Pencil className="h-4 w-4" />
@@ -72,10 +133,15 @@ export function MemberDialog({ member }: { member: PosterMember }) {
         </div>
         
         <div className="flex-1 overflow-y-auto p-6">
-            <form id="update-poster-member-form" action={action} className="h-full">
+            {isLoadingDocs && (
+                 <div className="mb-4 flex items-center gap-2 text-xs text-blue-400 bg-blue-500/10 p-2 rounded border border-blue-500/20">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Loading latest documents...
+                 </div>
+            )}
+
+            <form id="smart-update-poster-form" onSubmit={handleSmartSubmit} className="h-full">
               <FieldGroup className="flex flex-col gap-8">
                 
-                {/* Section 1: Personal Information */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                     <span className="bg-green-500/20 text-green-300 border border-green-500/30 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
@@ -101,7 +167,6 @@ export function MemberDialog({ member }: { member: PosterMember }) {
                   </div>
                 </div>
 
-                {/* Section 2: Documents */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                     <span className="bg-green-500/20 text-green-300 border border-green-500/30 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
@@ -113,19 +178,28 @@ export function MemberDialog({ member }: { member: PosterMember }) {
                             <FieldLabel className={labelClass}>Student Card</FieldLabel>
                             <VerificationStatusBadge status={member.sc_verified} />
                         </div>
-                        <CustomFileInput name="sc_link" accept=".pdf,.jpg,.png" currentFileUrl={member.sc_link} />
+                        <AtomicFileInput 
+                            name="sc_link_ignore" 
+                            accept=".pdf,.jpg,.png" 
+                            currentFileUrl={member.sc_link} 
+                            onFileSelect={setScFile}
+                        />
                     </Field>
                     <Field>
                         <div className="flex justify-between items-center mb-2">
                             <FieldLabel className={labelClass}>Formal Photo</FieldLabel>
                             <VerificationStatusBadge status={member.fp_verified} />
                         </div>
-                        <CustomFileInput name="fp_link" accept=".jpg,.png" currentFileUrl={member.fp_link} />
+                        <AtomicFileInput 
+                            name="fp_link_ignore" 
+                            accept=".jpg,.png" 
+                            currentFileUrl={member.fp_link} 
+                            onFileSelect={setFpFile}
+                        />
                     </Field>
                   </div>
                 </div>
 
-                {/* Section 3: Notes */}
                 {member.notes && member.notes.length > 0 && (
                    <div className="mt-4 pt-6 border-t border-white/10">
                     <div className="flex items-center gap-2 mb-4">
@@ -151,16 +225,16 @@ export function MemberDialog({ member }: { member: PosterMember }) {
         
         <div className="p-6 pt-4 border-t border-white/10 bg-slate-950 mt-auto">
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending} className="border-white/10 text-slate-300 hover:text-white hover:bg-white/10">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSaving} className="border-white/10 text-slate-300 hover:text-white hover:bg-white/10">
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                form="update-poster-member-form" 
-                disabled={isPending} 
-                className="bg-blue-600 hover:bg-blue-500 text-white w-full sm:w-auto font-semibold border-none"
+                form="smart-update-poster-form" 
+                disabled={isSaving} 
+                className="bg-green-600 hover:bg-green-500 text-white w-full sm:w-auto font-semibold border-none min-w-[120px]"
               >
-                {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Details"}
+                {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {saveStatus}</> : "Save Details"}
               </Button>
             </DialogFooter>
         </div>

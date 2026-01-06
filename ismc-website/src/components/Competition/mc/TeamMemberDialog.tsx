@@ -6,7 +6,6 @@ import { useActionState, useEffect, useState, useRef } from "react";
 // UI
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Eye, Pencil, Hourglass, XCircle, CheckCircle2, Loader2, Info, ScrollText } from "lucide-react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -17,6 +16,7 @@ import { toast, Toaster } from "sonner";
 
 // Actions
 import { updateMemberDetails } from "@/actions/server/mc";
+import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
 
 // --- Helpers ---
 function VerificationStatusBadge({ status }: { status: number }) {

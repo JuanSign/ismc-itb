@@ -1,10 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Eye, UploadCloud, X, FileCheck, Loader2, Save } from "lucide-react";
+import { Eye, UploadCloud, X, FileCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -15,21 +15,35 @@ type Props = {
   disabled?: boolean;
   placeholder?: string;
   maxSizeMB?: number;
-  onUpload?: (file: File) => Promise<void>;
+  onFileSelect: (file: File | null) => void;
 };
 
-export function CustomFileInput({
+export function AtomicFileInput({
+  name,
   accept,
   currentFileUrl,
   disabled,
   placeholder = "Select file...",
   maxSizeMB = 1,
-  onUpload
+  onFileSelect
 }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [prevUrl, setPrevUrl] = useState<string | null | undefined>(currentFileUrl);
+  
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, startTransition] = useTransition();
+
+  if (currentFileUrl !== prevUrl) {
+    setPrevUrl(currentFileUrl);
+    setFile(null);
+    setFileName(null);
+  }
+
+  useEffect(() => {
+    if (file === null && inputRef.current) {
+      inputRef.current.value = "";
+    }
+  }, [file]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -41,13 +55,16 @@ export function CustomFileInput({
         if (inputRef.current) inputRef.current.value = "";
         setFile(null);
         setFileName(null);
+        onFileSelect(null);
         return;
       }
       setFile(selectedFile);
       setFileName(selectedFile.name);
+      onFileSelect(selectedFile);
     } else {
       setFile(null);
       setFileName(null);
+      onFileSelect(null);
     }
   };
 
@@ -57,22 +74,10 @@ export function CustomFileInput({
     e.stopPropagation();
     setFile(null);
     setFileName(null);
+    onFileSelect(null);
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  const handleUploadClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!file || !onUpload) return;
-
-    startTransition(async () => {
-        await onUpload(file);
-        setFile(null);
-        setFileName(null);
-        if (inputRef.current) inputRef.current.value = "";
-    });
-  };
-
-  // UI States
   const hasNewFile = !!file;
   const hasSavedFile = !!currentFileUrl && !hasNewFile;
 
@@ -81,19 +86,19 @@ export function CustomFileInput({
       <Input
         ref={inputRef}
         type="file"
+        name={name}
         accept={accept}
         className="hidden"
         onChange={handleFileChange}
-        disabled={disabled || isUploading}
+        disabled={disabled}
       />
 
       <div className="flex items-center gap-2 w-full">
-        {/* Main Selection Box */}
         <div
-          onClick={!disabled && !isUploading ? triggerClick : undefined}
+          onClick={!disabled ? triggerClick : undefined}
           className={cn(
             "flex-1 flex items-center gap-3 px-3 py-2.5 border rounded-md transition-all relative group min-w-0",
-            (disabled || isUploading) ? "opacity-50 cursor-not-allowed bg-white/5 border-white/5" : "cursor-pointer",
+            disabled ? "opacity-50 cursor-not-allowed bg-white/5 border-white/5" : "cursor-pointer",
             !hasNewFile && !hasSavedFile && "bg-black/20 border-white/10 hover:bg-white/5 hover:border-white/20",
             hasNewFile ? "border-blue-500/30 bg-blue-500/10" : "",
             hasSavedFile ? "border-emerald-500/30 bg-emerald-500/10" : ""
@@ -104,8 +109,7 @@ export function CustomFileInput({
             hasNewFile ? "bg-blue-500/20 text-blue-400" :
             hasSavedFile ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-slate-400"
           )}>
-            {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> :
-             hasNewFile ? <UploadCloud className="h-4 w-4" /> :
+            {hasNewFile ? <UploadCloud className="h-4 w-4" /> :
              hasSavedFile ? <FileCheck className="h-4 w-4" /> : <UploadCloud className="h-4 w-4" />}
           </div>
 
@@ -115,18 +119,16 @@ export function CustomFileInput({
               hasNewFile ? "text-blue-300" :
               hasSavedFile ? "text-emerald-300" : "text-slate-300"
             )}>
-              {isUploading ? "Uploading..." :
-               fileName ? fileName :
+              {fileName ? fileName :
                hasSavedFile ? "File Saved" : placeholder}
             </span>
             <span className="text-xs text-slate-500 truncate">
-               {isUploading ? "Please wait" : 
-                hasNewFile ? "Click save icon to upload ->" : 
+               {hasNewFile ? "Ready to save" : 
                 hasSavedFile ? "Click to replace" : `Max ${maxSizeMB}MB`}
             </span>
           </div>
 
-          {hasNewFile && !isUploading && (
+          {hasNewFile && (
             <Button
               type="button"
               variant="ghost"
@@ -138,18 +140,6 @@ export function CustomFileInput({
             </Button>
           )}
         </div>
-
-        {hasNewFile && !isUploading && (
-            <Button
-                type="button"
-                size="icon"
-                onClick={handleUploadClick}
-                className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white shadow-lg animate-in fade-in zoom-in duration-300"
-                title="Upload this file"
-            >
-                <Save className="h-4 w-4" />
-            </Button>
-        )}
 
         {currentFileUrl && !hasNewFile && (
           <Button

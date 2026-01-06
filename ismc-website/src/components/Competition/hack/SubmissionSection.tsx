@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput"
+import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
 
 type SubmitState = { error?: string; message?: string };
 const initialState: SubmitState = {};

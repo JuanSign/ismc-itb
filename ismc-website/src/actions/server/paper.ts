@@ -6,7 +6,8 @@ import {
     UpdateMemberFormState,
     UpdateBillingFormState, 
     SubmitPaperFormState,
-    UploadDocsFormState
+    UploadDocsFormState,
+    MemberPaper
 } from "../types/Paper";
 import { refreshSession, verifySession } from "./session";
 import { DB } from "@/lib/DB";
@@ -110,18 +111,39 @@ export async function getTeamPageData() {
     const { account_id } = session;
     try {
         const data = await fetchTeamPageData(account_id);
-        // Sign URLs
+        
         for (const member of data.members) {
-            if(member.sc_link) member.sc_link = await getSignedUrlForR2(member.sc_link);
             if(member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
         }
+        
         if(data.team.pp_link) data.team.pp_link = await getSignedUrlForR2(data.team.pp_link);
         if(data.team.sd_link) data.team.sd_link = await getSignedUrlForR2(data.team.sd_link);
         if(data.team.od_link) data.team.od_link = await getSignedUrlForR2(data.team.od_link);
+        
         return data;
     } catch (e) {
         if ((e as Error).message === "User not assigned to a team.") redirect("/dashboard/paper");
         throw e;
+    }
+}
+
+export async function getMemberDocuments(targetAccountId: string) {
+    const session = await verifySession();
+    if (!session) return null;
+
+    try {
+        const result = await DB`SELECT * FROM paper_member WHERE account_id = ${targetAccountId}`;
+        if (result.length === 0) return null;
+        
+        const member = result[0];
+
+        if (member.sc_link) member.sc_link = await getSignedUrlForR2(member.sc_link);
+        if (member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
+
+        return member as MemberPaper;
+    } catch (error) {
+        console.error("Error fetching member docs:", error);
+        return null;
     }
 }
 
@@ -135,18 +157,84 @@ export async function updateMemberDetails(prevState: UpdateMemberFormState, form
         const institution = formData.get("institution") as string;
         const phoneNum = formData.get("phone_num") as string;
         const idNo = formData.get("id_no") as string;
-        const scFile = formData.get("sc_link") as File;
-        const fpFile = formData.get("fp_link") as File;
-
-        const scKey = (scFile && scFile.size > 0) ? await uploadFileToR2(scFile, "paper-sc", account_id) : null;
-        const fpKey = (fpFile && fpFile.size > 0) ? await uploadFileToR2(fpFile, "paper-fp", account_id) : null;
+        
+        const scKey = null;
+        const fpKey = null;
 
         await updateMember(account_id, name, institution, phoneNum, idNo, scKey, fpKey);
+        
         revalidatePath("/dashboard/paper/team");
         return { message: "Details saved successfully." };
     } catch (e) {
         console.error("Update Member Error:", e);
         return { error: "Error saving details." };
+    }
+}
+
+export async function uploadMemberDocument(
+    targetAccountId: string,
+    docType: 'sc' | 'fp',
+    formData: FormData
+) {
+    console.log(`7. [SERVER] Action received. User: ${targetAccountId}, Type: ${docType}`);
+    const session = await verifySession();
+    if (!session) return { error: "Not authenticated" };
+    
+    // --- DEBUG LOG START ---
+    console.log(`[UPLOAD DEBUG] Starting upload for User: ${targetAccountId}, Type: ${docType}`);
+    
+    try {
+        const file = formData.get("file") as File;
+        
+        // 1. Check File
+        if (!file || file.size === 0) {
+            console.error("[UPLOAD DEBUG] No file found in FormData");
+            return { error: "No file provided" };
+        }
+        console.log(`[UPLOAD DEBUG] File received: ${file.name}, Size: ${file.size} bytes`);
+
+        // 2. Upload to R2
+        const keyPrefix = docType === 'sc' ? 'paper-sc' : 'paper-fp';
+        const fileKey = await uploadFileToR2(file, keyPrefix, targetAccountId);
+        
+        console.log(`[UPLOAD DEBUG] R2 Upload Success. Key generated: ${fileKey}`);
+
+        if (!fileKey) {
+            return { error: "R2 Upload failed to return a key" };
+        }
+
+        // 3. Update Database (With RETURNING clause to verify update)
+        let updateResult;
+        if (docType === 'sc') {
+            updateResult = await DB`
+                UPDATE paper_member 
+                SET sc_link = ${fileKey}, sc_verified = 0 
+                WHERE account_id = ${targetAccountId}
+                RETURNING account_id, sc_link
+            `;
+        } else {
+            updateResult = await DB`
+                UPDATE paper_member 
+                SET fp_link = ${fileKey}, fp_verified = 0 
+                WHERE account_id = ${targetAccountId}
+                RETURNING account_id, fp_link
+            `;
+        }
+
+        // 4. Verify DB Row Count
+        if (updateResult.length === 0) {
+            console.error(`[UPLOAD DEBUG] CRITICAL: SQL ran but updated 0 rows. Check if account_id ${targetAccountId} exists in paper_member table.`);
+            return { error: "Database update failed (User not found)" };
+        }
+
+        console.log(`[UPLOAD DEBUG] Database Updated Successfully:`, updateResult[0]);
+
+        revalidatePath("/dashboard/paper");
+        return { success: true, message: "File uploaded successfully" };
+
+    } catch (e) {
+        console.error("[UPLOAD DEBUG] EXCEPTION THROWN:", e);
+        return { error: "Upload failed" };
     }
 }
 

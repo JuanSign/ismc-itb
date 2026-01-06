@@ -78,16 +78,11 @@ export function CustomFileInput({
           onClick={!disabled ? triggerClick : undefined}
           className={cn(
             "flex-1 flex items-center gap-3 px-3 py-2.5 border rounded-md transition-all relative group min-w-0",
-            // Disabled State
             disabled ? "opacity-50 cursor-not-allowed bg-white/5 border-white/5" : "cursor-pointer",
             
-            // Default State (Dark)
             !hasNewFile && !hasSavedFile && "bg-black/20 border-white/10 hover:bg-white/5 hover:border-white/20",
 
-            // New File State (Blue tint)
             hasNewFile ? "border-blue-500/30 bg-blue-500/10" : "",
-
-            // Saved File State (Emerald tint)
             hasSavedFile ? "border-emerald-500/30 bg-emerald-500/10" : ""
           )}
         >

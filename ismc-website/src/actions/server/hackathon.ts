@@ -6,7 +6,7 @@ import {
     UpdateMemberFormState,
     UpdateBillingFormState, 
     SubmitProjectFormState,
-    MemberHack // <--- Added this import
+    MemberHack
 } from "../types/Hackathon";
 import { refreshSession, verifySession } from "./session";
 import { DB } from "@/lib/DB";
@@ -22,7 +22,6 @@ import { redirect } from "next/navigation";
 import { getSignedUrlForR2, uploadFileToR2 } from "@/lib/R2";
 import { NeonDbError } from "@neondatabase/serverless";
 
-// --- Helper ---
 function generateTeamCode(): string {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let result = "";
@@ -32,7 +31,6 @@ function generateTeamCode(): string {
     return result;
 }
 
-// --- 1. CREATE TEAM ---
 export async function createTeam(
     prevState: CreateTeamFormState,
     formData: FormData
@@ -69,7 +67,6 @@ export async function createTeam(
         if (!isCodeUnique) return { error: "Failed to generate unique code." };
 
         await insertNewTeam(teamName, newCode, account_id, email);
-        
         await addEventToAccount(account_id, "HACK");
         await refreshSession(account_id);
 
@@ -82,7 +79,6 @@ export async function createTeam(
     redirect("/dashboard/hackathon");
 }
 
-// --- 2. JOIN TEAM ---
 export async function joinTeam(
     prevState: JoinTeamFormState,
     formData: FormData
@@ -109,7 +105,6 @@ export async function joinTeam(
         const teamId = team[0].team_id;
 
         await addMemberToTeam(teamId, account_id, email);
-        
         await addEventToAccount(account_id, "HACK");
         await refreshSession(account_id);
 
@@ -131,7 +126,6 @@ export async function joinTeam(
     redirect("/dashboard/hackathon");
 }
 
-// --- 3. LEAVE TEAM ---
 export async function leaveTeam() {
     const session = await verifySession();
     if (!session) redirect("/");
@@ -149,7 +143,6 @@ export async function leaveTeam() {
     redirect("/dashboard");
 }
 
-// --- 4. FETCH PAGE DATA ---
 export async function getTeamPageData() {
     const session = await verifySession();
     if (!session) redirect("/");
@@ -158,18 +151,10 @@ export async function getTeamPageData() {
     try {
         const data = await fetchTeamPageData(account_id);
         
-        // Sign Member Docs
         for (const member of data.members) {
-            // !!! IMPORTANT FIX !!!
-            // We removed sc_link signing here to prevent NetworkError (payload too large).
-            // This is now handled in 'getMemberDocuments' when the dialog opens.
-            // if(member.sc_link) member.sc_link = await getSignedUrlForR2(member.sc_link);
-            
-            // We keep fp_link (photo) because it is small and needed for the Avatar.
             if(member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
         }
 
-        // Sign Team Docs
         if(data.team.pp_link) data.team.pp_link = await getSignedUrlForR2(data.team.pp_link);
         if(data.team.sd_link) data.team.sd_link = await getSignedUrlForR2(data.team.sd_link);
         
@@ -182,19 +167,16 @@ export async function getTeamPageData() {
     }
 }
 
-// --- 5. NEW: FETCH SINGLE MEMBER DOCS (For Dialog) ---
 export async function getMemberDocuments(targetAccountId: string) {
     const session = await verifySession();
     if (!session) return null;
 
     try {
-        // Fetch fresh data for this specific member
         const result = await DB`SELECT * FROM hack_member WHERE account_id = ${targetAccountId}`;
         if (result.length === 0) return null;
         
         const member = result[0];
 
-        // NOW we sign the heavy documents on demand
         if (member.sc_link) member.sc_link = await getSignedUrlForR2(member.sc_link);
         if (member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
 
@@ -205,7 +187,6 @@ export async function getMemberDocuments(targetAccountId: string) {
     }
 }
 
-// --- 6. UPDATE MEMBER TEXT DETAILS ---
 export async function updateMemberDetails(
     prevState: UpdateMemberFormState,
     formData: FormData
@@ -220,8 +201,6 @@ export async function updateMemberDetails(
         const phoneNum = formData.get("phone_num") as string;
         const idNo = formData.get("id_no") as string;
         
-        // Note: Files are now uploaded via 'uploadMemberDocument', 
-        // so we don't process them here anymore, but we keep keys null just in case.
         const scKey = null; 
         const fpKey = null;
 
@@ -235,7 +214,6 @@ export async function updateMemberDetails(
     }
 }
 
-// --- 7. NEW: UPLOAD SINGLE FILE ---
 export async function uploadMemberDocument(
     targetAccountId: string,
     docType: 'sc' | 'fp',
@@ -266,7 +244,6 @@ export async function uploadMemberDocument(
     }
 }
 
-// --- 8. BILLING ---
 export async function updateBilling(
     prevState: UpdateBillingFormState,
     formData: FormData
@@ -289,7 +266,6 @@ export async function updateBilling(
     } catch { return { error: "Error uploading payment proof." }; }
 }
 
-// --- 9. SUBMISSION ---
 export async function submitProject(
     prevState: SubmitProjectFormState,
     formData: FormData
@@ -299,17 +275,14 @@ export async function submitProject(
     const { account_id } = session;
 
     try {
-        // 1. Handle File (Submission Document)
         const sdFile = formData.get("doc_submission") as File;
         const sdKey = (sdFile && sdFile.size > 0) 
             ? await uploadFileToR2(sdFile, "hack-sd", account_id) 
             : null;
 
-        // 2. Handle Description
         const description = formData.get("submission_desc") as string;
         if (!description) return { error: "Description is required." };
 
-        // 3. Handle External Links (Expects JSON string from frontend)
         const extLinksJson = formData.get("external_links") as string;
         let extLinks: string[] = [];
         try {

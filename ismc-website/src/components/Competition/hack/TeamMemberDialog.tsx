@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, useRef, useTransition } from "react";
+import { useEffect, useState, useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +16,9 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Eye, Pencil, Hourglass, XCircle, CheckCircle2, Loader2, Info, ScrollText } from "lucide-react";
-import { MemberHack, UpdateMemberFormState } from "@/actions/types/Hackathon";
+import { MemberHack } from "@/actions/types/Hackathon";
 import { updateMemberDetails, getMemberDocuments, uploadMemberDocument } from "@/actions/server/hackathon";
-import { CustomFileInput } from "./CustomFileInput";
+import { AtomicFileInput } from "@/components/CustomFileInput/AtomicFileInput";
 
 function VerificationStatusBadge({ status }: { status: number }) {
   const config = {
@@ -35,8 +35,6 @@ function VerificationStatusBadge({ status }: { status: number }) {
   );
 }
 
-const initialState: UpdateMemberFormState = {};
-
 export function TeamMemberDialog({
   member: initialMember,
   isCurrentUser,
@@ -47,11 +45,18 @@ export function TeamMemberDialog({
   const [open, setOpen] = useState(false);
   const hasHandledSuccess = useRef(false);
   const [member, setMember] = useState<MemberHack>(initialMember);
+  
+  const [scFile, setScFile] = useState<File | null>(null);
+  const [fpFile, setFpFile] = useState<File | null>(null);
+
   const [isLoadingDocs, startTransition] = useTransition();
-  const [state, action, isPending] = useActionState(updateMemberDetails, initialState);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string>("Save Details");
 
   useEffect(() => {
     if (open) {
+      setScFile(null);
+      setFpFile(null);
       hasHandledSuccess.current = false;
       startTransition(async () => {
         try {
@@ -66,27 +71,50 @@ export function TeamMemberDialog({
     }
   }, [open, initialMember]);
 
-  useEffect(() => {
-    if (state?.error) toast.error(state.error);
-    if (state?.message && !hasHandledSuccess.current) {
-      toast.success(state.message);
-      hasHandledSuccess.current = true;
-      setTimeout(() => setOpen(false), 0);
-    }
-  }, [state]);
-
-  const handleFileUpload = async (file: File, docType: 'sc' | 'fp') => {
-    const formData = new FormData();
-    formData.append("file", file);
+  const handleSmartSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSaving(true);
     
-    const result = await uploadMemberDocument(member.account_id, docType, formData);
+    const formData = new FormData(e.currentTarget);
+    const accountId = member.account_id;
 
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success("File uploaded successfully");
-      const freshData = await getMemberDocuments(member.account_id);
-      if (freshData) setMember(freshData);
+    try {
+      if (scFile) {
+        setSaveStatus("Uploading ID Card...");
+        const scData = new FormData();
+        scData.append("file", scFile);
+        const res = await uploadMemberDocument(accountId, 'sc', scData);
+        if (res.error) throw new Error("ID Card upload failed");
+      }
+
+      if (fpFile) {
+        setSaveStatus("Uploading Photo...");
+        const fpData = new FormData();
+        fpData.append("file", fpFile);
+        const res = await uploadMemberDocument(accountId, 'fp', fpData);
+        if (res.error) throw new Error("Photo upload failed");
+      }
+
+      setSaveStatus("Saving Details...");
+      
+      formData.delete("sc_link_ignore");
+      formData.delete("fp_link_ignore");
+
+      const result = await updateMemberDetails({}, formData);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      toast.success("All details saved successfully");
+      setOpen(false);
+      
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred");
+    } finally {
+      setIsSaving(false);
+      setSaveStatus("Save Details");
     }
   };
 
@@ -94,12 +122,10 @@ export function TeamMemberDialog({
   const labelClass = "text-slate-300";
 
   return (
-    // FIX 2: Handle the reset logic here in the event handler instead of useEffect
     <Dialog 
       open={open} 
       onOpenChange={(val) => {
         setOpen(val);
-        // When closing, reset the form state back to initial props
         if (!val) {
           setMember(initialMember);
         }
@@ -133,7 +159,7 @@ export function TeamMemberDialog({
                  </div>
             )}
             
-            <form id="update-hack-member-form" action={action} className="h-full">
+            <form id="smart-update-hack-form" onSubmit={handleSmartSubmit} className="h-full">
               <FieldGroup className="flex flex-col gap-8">
                 
                 <div className="space-y-4">
@@ -172,12 +198,12 @@ export function TeamMemberDialog({
                             <FieldLabel className={labelClass}>ID Card</FieldLabel>
                             <VerificationStatusBadge status={member.sc_verified} />
                         </div>
-                        <CustomFileInput 
+                        <AtomicFileInput 
                             name="sc_link_ignore" 
                             accept=".pdf,.jpg,.png" 
                             currentFileUrl={member.sc_link} 
-                            disabled={!isCurrentUser} 
-                            onUpload={(file) => handleFileUpload(file, 'sc')}
+                            disabled={!isCurrentUser}
+                            onFileSelect={setScFile}
                         />
                     </Field>
                     <Field>
@@ -185,12 +211,12 @@ export function TeamMemberDialog({
                             <FieldLabel className={labelClass}>Formal Photo</FieldLabel>
                             <VerificationStatusBadge status={member.fp_verified} />
                         </div>
-                        <CustomFileInput 
+                        <AtomicFileInput 
                             name="fp_link_ignore" 
                             accept=".jpg,.png" 
                             currentFileUrl={member.fp_link} 
-                            disabled={!isCurrentUser} 
-                            onUpload={(file) => handleFileUpload(file, 'fp')}
+                            disabled={!isCurrentUser}
+                            onFileSelect={setFpFile}
                         />
                     </Field>
                   </div>
@@ -227,16 +253,16 @@ export function TeamMemberDialog({
         <div className="p-6 pt-4 border-t border-white/10 bg-slate-950 mt-auto">
           {isCurrentUser ? (
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending} className="border-white/10 text-slate-300 hover:text-white hover:bg-white/10">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSaving} className="border-white/10 text-slate-300 hover:text-white hover:bg-white/10">
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                form="update-hack-member-form" 
-                disabled={isPending} 
-                className="bg-blue-600 hover:bg-blue-500 text-white w-full sm:w-auto font-semibold border-none"
+                form="smart-update-hack-form" 
+                disabled={isSaving} 
+                className="bg-blue-600 hover:bg-blue-500 text-white w-full sm:w-auto font-semibold border-none min-w-[120px]"
               >
-                {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Details"}
+                {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {saveStatus}</> : "Save Details"}
               </Button>
             </DialogFooter>
           ) : (
