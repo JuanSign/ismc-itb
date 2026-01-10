@@ -2,7 +2,7 @@
 
 import { 
     RegisterPosterState, UpdateMemberFormState,
-    UpdateBillingFormState, SubmitPosterFormState, UploadDocsFormState,
+    UpdateBillingFormState, SubmitPosterFormState,
     PosterMember
 } from "../types/Poster";
 import { refreshSession, verifySession } from "./session";
@@ -14,7 +14,7 @@ import {
 import { addEventToAccount, removeEventFromAccount } from "@/actions/database/account";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSignedUrlForR2, uploadFileToR2 } from "@/lib/R2";
+import { getSignedUrlForR2, uploadFileToR2, getPresignedUploadUrl } from "@/lib/R2";
 
 export async function registerPoster(): Promise<RegisterPosterState> {
     const session = await verifySession();
@@ -25,8 +25,7 @@ export async function registerPoster(): Promise<RegisterPosterState> {
         await registerUser(account_id, email);
         await addEventToAccount(account_id, "POSTER");
         await refreshSession(account_id);
-    } catch (e) {
-        console.error("Register Error:", e);
+    } catch {
         return { error: "Registration failed." };
     }
     revalidatePath("/dashboard/poster");
@@ -41,7 +40,7 @@ export async function leavePoster() {
         await unregisterUser(account_id);
         await removeEventFromAccount(account_id, "POSTER");
         await refreshSession(account_id);
-    } catch (error) { console.error("Leave Error:", error); }
+    } catch (error) { console.error(error); }
     revalidatePath("/dashboard/poster");
     redirect("/dashboard");
 }
@@ -54,9 +53,7 @@ export async function getPosterPageData() {
     const member = await fetchPosterPageData(account_id);
     if (!member) redirect("/dashboard"); 
 
-    // Note: SC Link is not signed here to save payload size. It is fetched via getMemberDocuments.
     if(member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
-    
     if(member.pp_link) member.pp_link = await getSignedUrlForR2(member.pp_link);
     if(member.od_link) member.od_link = await getSignedUrlForR2(member.od_link);
     if(member.sd_link) member.sd_link = await getSignedUrlForR2(member.sd_link);
@@ -95,15 +92,13 @@ export async function updateMemberDetails(prevState: UpdateMemberFormState, form
         const phoneNum = formData.get("phone_num") as string;
         const idNo = formData.get("id_no") as string;
         
-        // Files are handled by the orchestrator via uploadMemberDocument
         const scKey = null;
         const fpKey = null;
 
         await dbUpdateMember(account_id, name, institution, phoneNum, idNo, scKey, fpKey);
         revalidatePath("/dashboard/poster");
         return { message: "Details saved successfully." };
-    } catch (e) {
-        console.error("Update Member Error:", e);
+    } catch {
         return { error: "Error saving details." };
     }
 }
@@ -154,20 +149,21 @@ export async function updateBilling(prevState: UpdateBillingFormState, formData:
     } catch { return { error: "Error uploading payment proof." }; }
 }
 
-export async function uploadOriginalityDoc(prevState: UploadDocsFormState, formData: FormData): Promise<UploadDocsFormState> {
+export async function getPresignedUrl(
+    docType: 'submission' | 'originality', 
+    fileName: string, 
+    fileType: string
+) {
     const session = await verifySession();
-    if (!session) return { error: "Not authenticated." };
-    const { account_id } = session;
+    if (!session) return { error: "Unauthorized" };
+
+    const folder = docType === 'submission' ? 'poster-sd' : 'poster-od';
 
     try {
-        const odFile = formData.get("doc_originality") as File;
-        if (!odFile || odFile.size === 0) return { error: "Please select a file." };
-        const odKey = await uploadFileToR2(odFile, "poster-od", account_id);
-
-        await updateOriginality(account_id, odKey);
-        revalidatePath("/dashboard/poster");
-        return { message: "Originality proof uploaded successfully." };
-    } catch { return { error: "Error uploading document." }; }
+        return await getPresignedUploadUrl(folder, fileName, fileType, session.account_id);
+    } catch {
+        return { error: "Failed to generate upload URL" };
+    }
 }
 
 export async function submitPoster(prevState: SubmitPosterFormState, formData: FormData): Promise<SubmitPosterFormState> {
@@ -176,11 +172,22 @@ export async function submitPoster(prevState: SubmitPosterFormState, formData: F
     const { account_id } = session;
 
     try {
-        const sdFile = formData.get("doc_submission") as File;
-        const sdKey = (sdFile && sdFile.size > 0) ? await uploadFileToR2(sdFile, "poster-sd", account_id) : null;
+        const check = await DB`SELECT sub_verified FROM poster_member WHERE account_id = ${account_id}`;
+        if (check.length > 0 && check[0].sub_verified > 0 && check[0].sub_verified !== 1) {
+            return { error: "You have already submitted." };
+        }
+
+        const sdKey = formData.get("submission_key") as string;
+        const odKey = formData.get("originality_key") as string;
         const description = formData.get("submission_desc") as string;
 
+        if (!sdKey || !odKey || !description) {
+            return { error: "Missing required fields or files." };
+        }
+
         await updateSubmission(account_id, sdKey, description);
+        await updateOriginality(account_id, odKey);
+
         revalidatePath("/dashboard/poster");
         return { message: "Poster submitted successfully." };
     } catch (e) {

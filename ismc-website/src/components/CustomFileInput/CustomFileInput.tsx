@@ -77,7 +77,7 @@ export function CustomFileInput({
         <div 
           onClick={!disabled ? triggerClick : undefined}
           className={cn(
-            "flex-1 flex items-center gap-3 px-3 py-2.5 border rounded-md transition-all relative group min-w-0",
+            "flex-1 w-0 flex items-center gap-3 px-3 py-2.5 border rounded-md transition-all relative group min-w-0",
             disabled ? "opacity-50 cursor-not-allowed bg-white/5 border-white/5" : "cursor-pointer",
             
             !hasNewFile && !hasSavedFile && "bg-black/20 border-white/10 hover:bg-white/5 hover:border-white/20",
@@ -97,7 +97,7 @@ export function CustomFileInput({
             
             <div className="flex flex-col overflow-hidden min-w-0 flex-1">
                 <span className={cn(
-                    "text-sm truncate font-medium", 
+                    "text-sm truncate font-medium block", 
                     hasNewFile ? "text-blue-300" : 
                     hasSavedFile ? "text-emerald-300" : "text-slate-300"
                 )}>
@@ -106,7 +106,7 @@ export function CustomFileInput({
                      placeholder}
                 </span>
                 
-                <span className="text-xs text-slate-500 truncate">
+                <span className="text-xs text-slate-500 truncate block">
                    {hasNewFile ? "Ready to save" : 
                     hasSavedFile ? "Click to replace" : 
                     `Max ${maxSizeMB}MB (${accept.replace(/\./g, "").toUpperCase()})`}
