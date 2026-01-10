@@ -232,6 +232,8 @@ export default async function HackathonTeamPage() {
                 sdd={team.sdd}
                 extLinks={team.ext_link}
                 subVerified={team.sub_verified}
+                odLink={team.od_link}
+                odVerified={team.od_verified}
                 step="STEP 4"
                 className={`border-l-indigo-500 ${GLASS_CARD}`}
             />

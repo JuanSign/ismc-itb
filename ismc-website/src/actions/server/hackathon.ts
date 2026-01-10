@@ -19,7 +19,7 @@ import { updateMember } from "@/actions/database/hack_member";
 import { addEventToAccount, removeEventFromAccount } from "@/actions/database/account";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSignedUrlForR2, uploadFileToR2 } from "@/lib/R2";
+import { getSignedUrlForR2, uploadFileToR2, getPresignedUploadUrl } from "@/lib/R2";
 import { NeonDbError } from "@neondatabase/serverless";
 
 function generateTeamCode(): string {
@@ -109,16 +109,12 @@ export async function joinTeam(
         await refreshSession(account_id);
 
     } catch(e){
-        console.error("Join team error:", e);
-        
         if (e instanceof Error && e.message === "TEAM_FULL") {
             return { error: "This team has reached the maximum of 5 members." };
         }
-
         if (e instanceof NeonDbError && e.code === '23505') { 
             return { error: "You are already in a team." };
         }
-
         return { error: "An error occurred while joining." };
     }
 
@@ -136,7 +132,7 @@ export async function leaveTeam() {
         await removeEventFromAccount(account_id, "HACK");
         await refreshSession(account_id);
     } catch (error) {
-        console.error("Leave team error:", error);
+        console.error(error);
     }
 
     revalidatePath("/dashboard/hackathon");
@@ -157,6 +153,7 @@ export async function getTeamPageData() {
 
         if(data.team.pp_link) data.team.pp_link = await getSignedUrlForR2(data.team.pp_link);
         if(data.team.sd_link) data.team.sd_link = await getSignedUrlForR2(data.team.sd_link);
+        if(data.team.od_link) data.team.od_link = await getSignedUrlForR2(data.team.od_link);
         
         return data;
     } catch (e) {
@@ -266,6 +263,23 @@ export async function updateBilling(
     } catch { return { error: "Error uploading payment proof." }; }
 }
 
+export async function getPresignedUrl(
+    docType: 'submission' | 'originality', 
+    fileName: string, 
+    fileType: string
+) {
+    const session = await verifySession();
+    if (!session) return { error: "Unauthorized" };
+
+    const folder = docType === 'submission' ? 'hack-sd' : 'hack-od';
+
+    try {
+        return await getPresignedUploadUrl(folder, fileName, fileType, session.account_id);
+    } catch {
+        return { error: "Failed to generate upload URL" };
+    }
+}
+
 export async function submitProject(
     prevState: SubmitProjectFormState,
     formData: FormData
@@ -275,11 +289,9 @@ export async function submitProject(
     const { account_id } = session;
 
     try {
-        const sdFile = formData.get("doc_submission") as File;
-        const sdKey = (sdFile && sdFile.size > 0) 
-            ? await uploadFileToR2(sdFile, "hack-sd", account_id) 
-            : null;
-
+        const sdKey = formData.get("submission_key") as string;
+        const odKey = formData.get("originality_key") as string;
+        
         const description = formData.get("submission_desc") as string;
         if (!description) return { error: "Description is required." };
 
@@ -295,6 +307,10 @@ export async function submitProject(
         if (!team_id) return { error: "You are not on a team." };
 
         await updateSubmission(team_id, sdKey, description, extLinks);
+
+        if (odKey) {
+            await DB`UPDATE hack_team SET od_link = ${odKey}, od_verified = 0 WHERE team_id = ${team_id}`;
+        }
 
         revalidatePath("/dashboard/hackathon");
         return { message: "Project submitted successfully." };

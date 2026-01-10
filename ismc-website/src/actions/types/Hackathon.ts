@@ -14,6 +14,8 @@ export type TeamHack = {
 
   sd_link: string | null; // Submission Document
   sdd: string | null;     // Submission Description
+  od_link: string | null;
+  od_verified: number;
   sub_verified: number;
   ext_link: string[] | null; // External Links
 }
