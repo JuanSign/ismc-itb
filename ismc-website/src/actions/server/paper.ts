@@ -6,7 +6,6 @@ import {
     UpdateMemberFormState,
     UpdateBillingFormState, 
     SubmitPaperFormState,
-    UploadDocsFormState,
     MemberPaper
 } from "../types/Paper";
 import { refreshSession, verifySession } from "./session";
@@ -20,7 +19,7 @@ import { updateMember } from "@/actions/database/paper_member";
 import { addEventToAccount, removeEventFromAccount } from "@/actions/database/account";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSignedUrlForR2, uploadFileToR2 } from "@/lib/R2";
+import { getSignedUrlForR2, uploadFileToR2, getPresignedUploadUrl } from "@/lib/R2";
 import { NeonDbError } from "@neondatabase/serverless";
 
 function generateTeamCode(): string {
@@ -176,58 +175,23 @@ export async function uploadMemberDocument(
     docType: 'sc' | 'fp',
     formData: FormData
 ) {
-    console.log(`7. [SERVER] Action received. User: ${targetAccountId}, Type: ${docType}`);
     const session = await verifySession();
     if (!session) return { error: "Not authenticated" };
     
-    // --- DEBUG LOG START ---
-    console.log(`[UPLOAD DEBUG] Starting upload for User: ${targetAccountId}, Type: ${docType}`);
-    
     try {
         const file = formData.get("file") as File;
+        if (!file || file.size === 0) return { error: "No file provided" };
         
-        // 1. Check File
-        if (!file || file.size === 0) {
-            console.error("[UPLOAD DEBUG] No file found in FormData");
-            return { error: "No file provided" };
-        }
-        console.log(`[UPLOAD DEBUG] File received: ${file.name}, Size: ${file.size} bytes`);
-
-        // 2. Upload to R2
         const keyPrefix = docType === 'sc' ? 'paper-sc' : 'paper-fp';
         const fileKey = await uploadFileToR2(file, keyPrefix, targetAccountId);
         
-        console.log(`[UPLOAD DEBUG] R2 Upload Success. Key generated: ${fileKey}`);
+        if (!fileKey) return { error: "R2 Upload failed to return a key" };
 
-        if (!fileKey) {
-            return { error: "R2 Upload failed to return a key" };
-        }
-
-        // 3. Update Database (With RETURNING clause to verify update)
-        let updateResult;
         if (docType === 'sc') {
-            updateResult = await DB`
-                UPDATE paper_member 
-                SET sc_link = ${fileKey}, sc_verified = 0 
-                WHERE account_id = ${targetAccountId}
-                RETURNING account_id, sc_link
-            `;
+            await DB`UPDATE paper_member SET sc_link = ${fileKey}, sc_verified = 0 WHERE account_id = ${targetAccountId}`;
         } else {
-            updateResult = await DB`
-                UPDATE paper_member 
-                SET fp_link = ${fileKey}, fp_verified = 0 
-                WHERE account_id = ${targetAccountId}
-                RETURNING account_id, fp_link
-            `;
+            await DB`UPDATE paper_member SET fp_link = ${fileKey}, fp_verified = 0 WHERE account_id = ${targetAccountId}`;
         }
-
-        // 4. Verify DB Row Count
-        if (updateResult.length === 0) {
-            console.error(`[UPLOAD DEBUG] CRITICAL: SQL ran but updated 0 rows. Check if account_id ${targetAccountId} exists in paper_member table.`);
-            return { error: "Database update failed (User not found)" };
-        }
-
-        console.log(`[UPLOAD DEBUG] Database Updated Successfully:`, updateResult[0]);
 
         revalidatePath("/dashboard/paper");
         return { success: true, message: "File uploaded successfully" };
@@ -256,22 +220,23 @@ export async function updateBilling(prevState: UpdateBillingFormState, formData:
     } catch { return { error: "Error uploading payment proof." }; }
 }
 
-export async function uploadOriginalityDoc(prevState: UploadDocsFormState, formData: FormData): Promise<UploadDocsFormState> {
+// --- NEW PRESIGNED URL ACTIONS ---
+
+export async function getPresignedUrl(
+    docType: 'submission' | 'originality', 
+    fileName: string, 
+    fileType: string
+) {
     const session = await verifySession();
-    if (!session) return { error: "Not authenticated." };
-    const { account_id } = session;
+    if (!session) return { error: "Unauthorized" };
+
+    const folder = docType === 'submission' ? 'paper-sd' : 'paper-od';
 
     try {
-        const odFile = formData.get("doc_originality") as File;
-        if (!odFile || odFile.size === 0) return { error: "Please select a file." };
-        const odKey = await uploadFileToR2(odFile, "paper-od", account_id);
-        const team_id = await getTeamId(account_id);
-        if (!team_id) return { error: "Not on a team." };
-
-        await updateOriginality(team_id, odKey);
-        revalidatePath("/dashboard/paper/team");
-        return { message: "Originality proof uploaded successfully." };
-    } catch { return { error: "Error uploading document." }; }
+        return await getPresignedUploadUrl(folder, fileName, fileType, session.account_id);
+    } catch {
+        return { error: "Failed to generate upload URL" };
+    }
 }
 
 export async function submitPaper(prevState: SubmitPaperFormState, formData: FormData): Promise<SubmitPaperFormState> {
@@ -280,14 +245,23 @@ export async function submitPaper(prevState: SubmitPaperFormState, formData: For
     const { account_id } = session;
 
     try {
-        const sdFile = formData.get("doc_submission") as File;
-        const sdKey = (sdFile && sdFile.size > 0) ? await uploadFileToR2(sdFile, "paper-sd", account_id) : null;
+        const sdKey = formData.get("submission_key") as string;
+        const odKey = formData.get("originality_key") as string;
         const description = formData.get("submission_desc") as string;
 
         const team_id = await getTeamId(account_id);
         if (!team_id) return { error: "Not on a team." };
 
-        await updateSubmission(team_id, sdKey, description);
+        // 1. Update Paper Submission (if provided or description changed)
+        // If sdKey is null/empty, the DB function usually keeps the old one or handles it.
+        // Assuming updateSubmission expects (team_id, sdKey | null, description)
+        await updateSubmission(team_id, sdKey || null, description);
+
+        // 2. Update Originality (if provided)
+        if (odKey) {
+            await updateOriginality(team_id, odKey);
+        }
+
         revalidatePath("/dashboard/paper/team");
         return { message: "Paper submitted successfully." };
     } catch (e) {

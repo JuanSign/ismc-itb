@@ -2,7 +2,7 @@
 
 import { 
     RegisterPhotoState, UpdateMemberFormState,
-    UpdateBillingFormState, SubmitPhotoFormState, UploadDocsFormState,
+    UpdateBillingFormState, SubmitPhotoFormState, 
     PhotoMember
 } from "../types/Photo";
 import { refreshSession, verifySession } from "./session";
@@ -14,7 +14,7 @@ import {
 import { addEventToAccount, removeEventFromAccount } from "@/actions/database/account";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSignedUrlForR2, uploadFileToR2 } from "@/lib/R2";
+import { getSignedUrlForR2, uploadFileToR2, getPresignedUploadUrl } from "@/lib/R2";
 
 export async function registerPhoto(): Promise<RegisterPhotoState> {
     const session = await verifySession();
@@ -41,7 +41,7 @@ export async function leavePhoto() {
         await unregisterUser(account_id);
         await removeEventFromAccount(account_id, "PHOTO");
         await refreshSession(account_id);
-    } catch (error) { console.error("Leave Error:", error); }
+    } catch (error) { console.error(error); }
     revalidatePath("/dashboard/photo");
     redirect("/dashboard");
 }
@@ -55,7 +55,6 @@ export async function getPhotoPageData() {
     if (!member) redirect("/dashboard"); 
 
     if(member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
-    
     if(member.pp_link) member.pp_link = await getSignedUrlForR2(member.pp_link);
     if(member.od_link) member.od_link = await getSignedUrlForR2(member.od_link);
     if(member.sd_link) member.sd_link = await getSignedUrlForR2(member.sd_link);
@@ -152,20 +151,21 @@ export async function updateBilling(prevState: UpdateBillingFormState, formData:
     } catch { return { error: "Error uploading payment proof." }; }
 }
 
-export async function uploadOriginalityDoc(prevState: UploadDocsFormState, formData: FormData): Promise<UploadDocsFormState> {
+export async function getPresignedUrl(
+    docType: 'submission' | 'originality', 
+    fileName: string, 
+    fileType: string
+) {
     const session = await verifySession();
-    if (!session) return { error: "Not authenticated." };
-    const { account_id } = session;
+    if (!session) return { error: "Unauthorized" };
+
+    const folder = docType === 'submission' ? 'photo-sd' : 'photo-od';
 
     try {
-        const odFile = formData.get("doc_originality") as File;
-        if (!odFile || odFile.size === 0) return { error: "Please select a file." };
-        const odKey = await uploadFileToR2(odFile, "photo-od", account_id);
-
-        await updateOriginality(account_id, odKey);
-        revalidatePath("/dashboard/photo");
-        return { message: "Originality proof uploaded successfully." };
-    } catch { return { error: "Error uploading document." }; }
+        return await getPresignedUploadUrl(folder, fileName, fileType, session.account_id);
+    } catch {
+        return { error: "Failed to generate upload URL" };
+    }
 }
 
 export async function submitPhoto(prevState: SubmitPhotoFormState, formData: FormData): Promise<SubmitPhotoFormState> {
@@ -174,11 +174,22 @@ export async function submitPhoto(prevState: SubmitPhotoFormState, formData: For
     const { account_id } = session;
 
     try {
-        const sdFile = formData.get("doc_submission") as File;
-        const sdKey = (sdFile && sdFile.size > 0) ? await uploadFileToR2(sdFile, "photo-sd", account_id) : null;
+        const check = await DB`SELECT sub_verified FROM photo_member WHERE account_id = ${account_id}`;
+        if (check.length > 0 && check[0].sub_verified > 0 && check[0].sub_verified !== 1) {
+            return { error: "You have already submitted." };
+        }
+
+        const sdKey = formData.get("submission_key") as string;
+        const odKey = formData.get("originality_key") as string;
         const description = formData.get("submission_desc") as string;
 
+        if (!sdKey || !odKey || !description) {
+            return { error: "Missing required fields or files." };
+        }
+
         await updateSubmission(account_id, sdKey, description);
+        await updateOriginality(account_id, odKey);
+
         revalidatePath("/dashboard/photo");
         return { message: "Photo submitted successfully." };
     } catch (e) {
