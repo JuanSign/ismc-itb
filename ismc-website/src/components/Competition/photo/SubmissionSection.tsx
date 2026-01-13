@@ -90,12 +90,17 @@ export function PhotoSubmissionSection({
 
         if (odFile && odFile.size > 0) {
             uploadPromises.push((async () => {
-                const res = await getPresignedUrl('originality', odFile.name, odFile.type);
+                const safeType = odFile.type || "application/octet-stream";
+                const res = await getPresignedUrl('originality', odFile.name, safeType);
                 if ('error' in res) throw new Error(res.error);
                 const { signedUrl, key } = res;
                 if (!signedUrl || !key) throw new Error("Failed to get originality upload URL");
 
-                const uploadRes = await fetch(signedUrl, { method: "PUT", body: odFile, headers: { "Content-Type": odFile.type } });
+                const uploadRes = await fetch(signedUrl, { 
+                    method: "PUT", 
+                    body: odFile, 
+                    headers: { "Content-Type": safeType } 
+                });
                 if(!uploadRes.ok) throw new Error("Failed to upload Originality document");
                 finalOdKey = key;
             })());
@@ -103,12 +108,17 @@ export function PhotoSubmissionSection({
 
         if (sdFile && sdFile.size > 0) {
             uploadPromises.push((async () => {
-                const res = await getPresignedUrl('submission', sdFile.name, sdFile.type);
+                const safeType = sdFile.type || "application/octet-stream";
+                const res = await getPresignedUrl('submission', sdFile.name, safeType);
                 if ('error' in res) throw new Error(res.error);
                 const { signedUrl, key } = res;
                 if (!signedUrl || !key) throw new Error("Failed to get photo upload URL");
 
-                const uploadRes = await fetch(signedUrl, { method: "PUT", body: sdFile, headers: { "Content-Type": sdFile.type } });
+                const uploadRes = await fetch(signedUrl, { 
+                    method: "PUT", 
+                    body: sdFile, 
+                    headers: { "Content-Type": safeType } 
+                });
                 if(!uploadRes.ok) throw new Error("Failed to upload Photo");
                 finalSdKey = key;
             })());
@@ -155,7 +165,6 @@ export function PhotoSubmissionSection({
         
         <form onSubmit={handleSmartSubmit} className="space-y-8">
             
-            {/* --- PART 1: ORIGINALITY DOCUMENT --- */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                     <h4 className="font-semibold flex items-center gap-2">
@@ -177,7 +186,6 @@ export function PhotoSubmissionSection({
                 />
             </div>
 
-            {/* --- PART 2: PHOTO SUBMISSION --- */}
             <div className="space-y-6">
                 <div className="flex items-center justify-between border-b pb-2">
                     <h4 className="font-semibold">2. Photo & Caption</h4>
