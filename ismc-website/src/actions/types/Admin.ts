@@ -62,6 +62,7 @@ export interface HackTeam {
   pp_verified: number;
 
   // Submission
+  od_link: string | null;       // Originality Document
   sd_link: string | null;       // Document (PDF/PPT)
   sdd: string | null;           // Description
   sub_verified: number;         // Submission Verification

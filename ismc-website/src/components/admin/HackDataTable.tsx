@@ -27,6 +27,7 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
   const [search, setSearch] = useState("");
   const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [verifyingSub, setVerifyingSub] = useState<string | null>(null);
 
   const toggleRow = (id: string) => {
     const newSet = new Set(expandedRows);
@@ -68,12 +69,26 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
       toast.success("Doc status updated");
   }
 
+  const handleSubmissionDecision = async (teamId: string, decision: 'accept' | 'reject') => {
+    setVerifyingSub(teamId);
+    
+    if (decision === 'accept') {
+        await updateHackStatus(teamId, 'team', 'sub_verified', 2);
+        await updateHackStatus(teamId, 'team', 'od_verified', 2);
+        toast.success("Submission Accepted");
+    } else {
+        await updateHackStatus(teamId, 'team', 'submission_decision', 0, 'submission_reject');
+        toast.success("Submission Rejected & Data Cleared");
+    }
+    setVerifyingSub(null);
+  };
+
   const filteredData = data.filter(team => 
     team.name.toLowerCase().includes(search.toLowerCase()) ||
     team.code.toLowerCase().includes(search.toLowerCase())
   );
 
-  const TeamDocRow = ({ label, link, verified, field, teamId }: { label: string, link: string | null, verified: number, field: string, teamId: string }) => (
+  const TeamDocRow = ({ label, link, verified, field, teamId, hideAuth = false }: { label: string, link: string | null, verified: number, field: string, teamId: string, hideAuth?: boolean }) => (
     <div className="flex items-center justify-between p-2.5 bg-zinc-900/50 rounded border border-zinc-800 mb-2">
         <div className="flex items-center gap-3">
              <Button 
@@ -93,7 +108,7 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
              : verified === 1 ? <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] hover:bg-red-500/20">Rejected</Badge> 
              : <Badge variant="outline" className="text-zinc-500 border-zinc-700 text-[10px]">Pending</Badge>}
              
-             {link && (
+             {(link && !hideAuth) && (
                  <div className="flex items-center gap-1 ml-2">
                     <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-emerald-500/20 hover:text-emerald-400 text-zinc-600" onClick={() => handleVerifyTeamDoc(teamId, field, 2)}>
                         <Check className="h-3 w-3" />
@@ -153,9 +168,9 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                     <TableCell>{getTeamStatusBadge(team.status)}</TableCell>
 
                     <TableCell>
-                       {team.pp_verified === 2 ? <Badge className="bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20">Paid</Badge> 
-                       : team.pp_verified === 1 ? <Badge className="bg-red-500/15 text-red-400 hover:bg-red-500/20 border-red-500/20">Rejected</Badge> 
-                       : <Badge variant="outline" className="text-zinc-500 border-zinc-700">Check</Badge>}
+                        {team.pp_verified === 2 ? <Badge className="bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20">Paid</Badge> 
+                        : team.pp_verified === 1 ? <Badge className="bg-red-500/15 text-red-400 hover:bg-red-500/20 border-red-500/20">Rejected</Badge> 
+                        : <Badge variant="outline" className="text-zinc-500 border-zinc-700">Check</Badge>}
                     </TableCell>
 
                     <TableCell className="text-right">
@@ -169,7 +184,6 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                         <div className="p-6 border-l-2 border-blue-600 bg-zinc-950/30 shadow-inner">
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                 
-                                {/* LEFT: Team Admin */}
                                 <div className="lg:col-span-4 space-y-6">
                                     
                                     <div className="p-4 rounded-lg bg-zinc-900/50 border border-zinc-800">
@@ -197,19 +211,26 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                                         
                                         <div className="my-2 border-t border-zinc-800/50"></div>
                                         
-                                        {/* SUBMISSION SECTION */}
-                                        <div className="bg-zinc-900/20 p-3 rounded border border-zinc-800/50">
-                                            <div className="flex items-center gap-2 mb-2 text-blue-400">
-                                                <AlignLeft className="h-3 w-3" />
-                                                <h5 className="text-[10px] font-bold uppercase">Submission</h5>
+                                        <div className={`p-3 rounded border transition-colors ${
+                                            team.sub_verified === 2 ? 'bg-emerald-950/10 border-emerald-500/20' :
+                                            team.sub_verified === 1 ? 'bg-red-950/10 border-red-500/20' :
+                                            'bg-zinc-900/20 border-zinc-800/50'
+                                        }`}>
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-2 text-blue-400">
+                                                    <AlignLeft className="h-3 w-3" />
+                                                    <h5 className="text-[10px] font-bold uppercase">Submission</h5>
+                                                </div>
+                                                {team.sub_verified === 2 ? <Badge className="h-5 bg-emerald-500 text-white hover:bg-emerald-600">ACCEPTED</Badge> :
+                                                 team.sub_verified === 1 ? <Badge variant="destructive" className="h-5">REJECTED</Badge> :
+                                                 <Badge variant="secondary" className="h-5 text-zinc-500 bg-zinc-900">PENDING</Badge>
+                                                }
                                             </div>
                                             
-                                            {/* 1. Description */}
                                             <div className="mb-3 p-2.5 bg-black rounded border border-zinc-800 text-xs text-zinc-300 max-h-32 overflow-y-auto custom-scrollbar whitespace-pre-wrap leading-relaxed">
                                                 {team.sdd ? team.sdd : <span className="text-zinc-600 italic">No description submitted yet.</span>}
                                             </div>
                                             
-                                            {/* 2. External Links (GitHub etc) */}
                                             {team.ext_link && team.ext_link.length > 0 && (
                                                 <div className="flex flex-col gap-1 mb-3">
                                                     {team.ext_link.map((link, i) => (
@@ -221,12 +242,46 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                                                 </div>
                                             )}
 
-                                            {/* 3. Document */}
-                                            <TeamDocRow label="Submission File" link={team.sd_link} verified={team.sub_verified} field="sub_verified" teamId={team.team_id} />
+                                            <div className="space-y-1 mb-4">
+                                                <TeamDocRow 
+                                                    label="Submission File" 
+                                                    link={team.sd_link} 
+                                                    verified={team.sub_verified} 
+                                                    field="sub_verified" 
+                                                    teamId={team.team_id} 
+                                                    hideAuth={true} 
+                                                />
+                                                <TeamDocRow 
+                                                    label="Originality Doc" 
+                                                    link={team.od_link} 
+                                                    verified={team.sub_verified} 
+                                                    field="sub_verified" 
+                                                    teamId={team.team_id}
+                                                    hideAuth={true}
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Button 
+                                                    className="bg-zinc-800 hover:bg-emerald-600 hover:text-white text-zinc-400 border border-zinc-700 h-8 text-xs"
+                                                    onClick={() => handleSubmissionDecision(team.team_id, 'accept')}
+                                                    disabled={verifyingSub === team.team_id}
+                                                >
+                                                    {verifyingSub === team.team_id ? <Loader2 className="h-3 w-3 animate-spin mr-2"/> : <Check className="h-3 w-3 mr-2" />}
+                                                    Accept All
+                                                </Button>
+                                                <Button 
+                                                    className="bg-zinc-800 hover:bg-red-600 hover:text-white text-zinc-400 border border-zinc-700 h-8 text-xs"
+                                                    onClick={() => handleSubmissionDecision(team.team_id, 'reject')}
+                                                    disabled={verifyingSub === team.team_id}
+                                                >
+                                                    {verifyingSub === team.team_id ? <Loader2 className="h-3 w-3 animate-spin mr-2"/> : <Trash2 className="h-3 w-3 mr-2" />}
+                                                    Reject & Wipe
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Notes */}
                                     <div className="space-y-3 pt-4 border-t border-zinc-800">
                                         <h4 className="text-xs font-bold uppercase text-zinc-500">Admin Notes</h4>
                                         <div className="space-y-2">
@@ -244,7 +299,6 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                                     </div>
                                 </div>
 
-                                {/* RIGHT: Members Grid */}
                                 <div className="lg:col-span-8">
                                     <h4 className="text-xs font-bold uppercase text-zinc-500 mb-4">Team Members</h4>
                                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">

@@ -5,7 +5,6 @@ import { getSignedUrlForR2 } from "@/lib/R2";
 import { revalidatePath } from "next/cache";
 import { HackTeam } from "../types/Admin";
 
-// --- 1. Fetch Data ---
 export async function getHackathonData() {
   const data = await DB`
     SELECT 
@@ -24,7 +23,6 @@ export async function getHackathonData() {
   return data as HackTeam[]; 
 }
 
-// --- 2. Sign URL ---
 export async function getSignedDocUrl(key: string | null) {
   if (!key) return { success: false, error: "No key provided" };
   try {
@@ -36,17 +34,28 @@ export async function getSignedDocUrl(key: string | null) {
   }
 }
 
-// --- 3. Update Status / Notes ---
 export async function updateHackStatus(
   id: string, 
   type: 'team' | 'member', 
   field: string, 
   value: string | number, 
-  mode: 'update' | 'remove_note' = 'update'
+  mode: 'update' | 'remove_note' | 'submission_reject' = 'update'
 ) {
   try {
-    // --- CASE A: NOTES ---
-    if (field === 'notes') {
+    if (type === 'team' && field === 'submission_decision' && mode === 'submission_reject') {
+        await DB`
+            UPDATE hack_team 
+            SET 
+                sub_verified = 1, 
+                od_verified = 1,
+                sdd = NULL, 
+                sd_link = NULL, 
+                od_link = NULL, 
+                ext_link = NULL 
+            WHERE team_id = ${id}
+        `;
+    }
+    else if (field === 'notes') {
        if (type === 'team') {
          if (mode === 'remove_note') {
            await DB`UPDATE hack_team SET notes = array_remove(notes, ${String(value)}) WHERE team_id = ${id}`;
@@ -61,19 +70,16 @@ export async function updateHackStatus(
          }
        }
     } 
-    
-    // --- CASE B: TEAM COLUMNS ---
     else if (type === 'team') {
         const numVal = Number(value);
         switch (field) {
             case 'pp_verified':  await DB`UPDATE hack_team SET pp_verified = ${numVal} WHERE team_id = ${id}`; break;
             case 'sub_verified': await DB`UPDATE hack_team SET sub_verified = ${numVal} WHERE team_id = ${id}`; break;
+            case 'od_verified': await DB`UPDATE hack_team SET od_verified = ${numVal} WHERE team_id = ${id}`; break;
             case 'status':       await DB`UPDATE hack_team SET status = ${numVal} WHERE team_id = ${id}`; break;
             default: throw new Error(`Invalid team field: ${field}`);
         }
     } 
-    
-    // --- CASE C: MEMBER COLUMNS ---
     else if (type === 'member') {
         const numVal = Number(value);
         switch (field) {
