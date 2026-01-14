@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { submitProject, getPresignedUrl } from "@/actions/server/hackathon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,10 +28,20 @@ import { CustomFileInput } from "@/components/CustomFileInput/CustomFileInput";
 
 function parseSDD(sdd: string | null) {
   if (!sdd) return { title: "", theme: "", desc: "" };
-  const match = sdd.match(/^\[(.*?)\]\[(.*?)\]([\s\S]*)$/);
-  if (match) {
-    return { title: match[1], theme: match[2], desc: match[3] };
+  
+  let match = sdd.match(/^\[(.*?)\]\[(.*?)\]([\s\S]*)$/);
+  
+  if (!match) {
+    match = sdd.match(/^\[(.*?)\]\[(.*?)$/);
+    if (match) {
+        return { title: match[1], theme: match[2], desc: "" };
+    }
   }
+
+  if (match) {
+    return { title: match[1], theme: match[2], desc: match[3] || "" };
+  }
+  
   return { title: "", theme: "", desc: sdd };
 }
 
@@ -71,6 +81,14 @@ export function SubmissionSection({
   const [theme, setTheme] = useState(parsed.theme);
 
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    const latestParsed = parseSDD(sdd);
+    if (latestParsed.title || latestParsed.theme) {
+        setTitle(latestParsed.title);
+        setTheme(latestParsed.theme);
+    }
+  }, [sdd]);
 
   const isSubmitted = subVerified === 0 && sdLink !== null && odLink !== null; 
   const isLocked = isSubmitted || subVerified === 2;
@@ -192,7 +210,6 @@ export function SubmissionSection({
                 <Badge variant="outline" className="bg-background">{step}</Badge>
                 <span className="text-sm font-medium text-muted-foreground">Final Submission</span>
             </div>
-            {/* Show Overall Status badge here if needed, or rely on internal badges */}
         </div>
         <CardTitle>Submission & Originality</CardTitle>
         <CardDescription>
@@ -202,7 +219,6 @@ export function SubmissionSection({
       
       <CardContent className="space-y-6">
         
-        {/* Banner */}
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 items-start text-blue-800">
             <Quote className="h-5 w-5 shrink-0 mt-0.5 fill-blue-200" />
             <div>
@@ -214,7 +230,6 @@ export function SubmissionSection({
 
         <form onSubmit={handleSmartSubmit} className="space-y-8">
             
-            {/* --- PART 1: ORIGINALITY --- */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                     <h4 className="font-semibold text-base flex items-center gap-2">
@@ -238,10 +253,8 @@ export function SubmissionSection({
                 </div>
             </div>
 
-            {/* Separator between sections */}
             <Separator />
 
-            {/* --- PART 2: PROJECT DETAILS --- */}
             <div className="space-y-5">
                 <div className="flex items-center justify-between border-b pb-2">
                     <h4 className="font-semibold text-base flex items-center gap-2">
@@ -278,10 +291,11 @@ export function SubmissionSection({
                         </Select>
                     </div>
 
+                    {/* FIX 3: Add the missing bracket ']' here so future saves are correct */}
                     <input 
                         type="hidden" 
                         name="submission_desc" 
-                        value={`[${title}][${theme}`} 
+                        value={`[${title}][${theme}]`} 
                     />
 
                     <div className="space-y-2">
@@ -303,7 +317,6 @@ export function SubmissionSection({
                         />
                     </div>
 
-                    {/* External Links Section */}
                     <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
                         <Label className="text-base">External Links</Label>
                         <p className="text-xs text-muted-foreground -mt-1.5 mb-2">
