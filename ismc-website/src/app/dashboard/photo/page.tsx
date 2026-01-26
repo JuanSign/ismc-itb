@@ -13,9 +13,9 @@ import { PhotoMemberDialog } from "@/components/Competition/photo/MemberDialog";
 import { PaymentSection } from "@/components/Competition/general/PaymentSection";
 import { PhotoSubmissionSection } from "@/components/Competition/photo/SubmissionSection";
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
+import { EngagementSection } from "@/components/Competition/photo/EngagementSection";
 import { Toaster } from "sonner";
 
-// --- SHARED GLASS STYLE ---
 const GLASS_CARD = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
 
 function getInitials(name: string | null, email: string) {
@@ -81,12 +81,13 @@ export default async function PhotoPage() {
 
   const isPaymentLocked = status < 1;
   const isSubmissionLocked = status < 2;
+  const isFinalist = !!member.is_finalist;
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
         <Toaster richColors/>
-        {/* --- STEP 1: PARTICIPANT INFO --- */}
+        
         <Card className={`border-l-4 border-l-blue-600 ${GLASS_CARD}`}>
           <CardHeader>
             <div className="flex flex-col md:flex-row justify-between items-start gap-4">
@@ -145,7 +146,6 @@ export default async function PhotoPage() {
           </CardFooter>
         </Card>
 
-        {/* --- STEP 2: PAYMENT --- */}
         {isPaymentLocked ? (
             <LockedSection 
                 step="STEP 2" 
@@ -173,7 +173,6 @@ export default async function PhotoPage() {
             />
         )}
 
-        {/* --- STEP 3: SUBMISSION & ORIGINALITY --- */}
         {isSubmissionLocked ? (
             <LockedSection 
                 step="STEP 3" 
@@ -192,6 +191,23 @@ export default async function PhotoPage() {
                 step="STEP 3" 
                 className={`border-l-indigo-500 ${GLASS_CARD}`}
             />
+        )}
+
+        {isFinalist && (
+            <>
+                <div className="flex items-center gap-2 my-2 justify-center opacity-50">
+                    <Separator className="flex-1 bg-white/10" />
+                    <span className="text-xs text-amber-500 font-mono tracking-widest uppercase">Finalist Zone</span>
+                    <Separator className="flex-1 bg-white/10" />
+                </div>
+
+                <EngagementSection 
+                    edLink={member.ed_link}
+                    edVerified={member.ed_verified}
+                    step="FINAL STAGE"
+                    className={`border-l-amber-500 ${GLASS_CARD}`}
+                />
+            </>
         )}
 
       </div>

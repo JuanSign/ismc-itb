@@ -6,10 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, Search, Download, Loader2, Send, Trash2, Check, X, User, Image as ImageIcon, AlignLeft } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, Download, Loader2, Send, Trash2, Check, X, User, Image as ImageIcon, AlignLeft, Trophy, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { getSignedDocUrl, updatePhotoStatus } from "@/actions/server/admin_photo";
 import { PhotoMember } from "@/actions/types/Photo";
+import { Switch } from "@/components/ui/switch"; 
+import { Label } from "@/components/ui/label";
 
 const getStatusBadge = (status: number) => {
     switch(status) {
@@ -56,6 +58,12 @@ export function PhotoDataTable({ data }: { data: PhotoMember[] }) {
       await updatePhotoStatus(id, field, value);
       setLoadingField(null);
       toast.success("Doc status updated");
+  }
+
+  const handleToggleFinalist = async (id: string, currentVal: boolean) => {
+      const newVal = currentVal ? 0 : 1;
+      await updatePhotoStatus(id, 'is_finalist', newVal);
+      toast.success(newVal === 1 ? "Promoted to Finalist" : "Removed from Finalist");
   }
 
   const handleAddNote = async (id: string, formData: FormData) => {
@@ -153,16 +161,21 @@ export function PhotoDataTable({ data }: { data: PhotoMember[] }) {
                     </TableCell>
                     
                     <TableCell>
-                       <div className="font-medium text-zinc-200">{m.name}</div>
-                       <div className="text-xs text-zinc-500">{m.email}</div>
+                        <div className="flex items-center gap-2">
+                             <div>
+                                 <div className="font-medium text-zinc-200">{m.name}</div>
+                                 <div className="text-xs text-zinc-500">{m.email}</div>
+                             </div>
+                             {m.is_finalist && <Trophy className="w-3 h-3 text-amber-500 fill-amber-500/20" />}
+                        </div>
                     </TableCell>
                     
                     <TableCell>{getStatusBadge(m.status)}</TableCell>
 
                     <TableCell>
-                       {m.pp_verified === 2 ? <Badge className="bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20">Paid</Badge> 
-                       : m.pp_verified === 1 ? <Badge className="bg-red-500/15 text-red-400 hover:bg-red-500/20 border-red-500/20">Rejected</Badge> 
-                       : <Badge variant="outline" className="text-zinc-500 border-zinc-700">Check</Badge>}
+                        {m.pp_verified === 2 ? <Badge className="bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20">Paid</Badge> 
+                        : m.pp_verified === 1 ? <Badge className="bg-red-500/15 text-red-400 hover:bg-red-500/20 border-red-500/20">Rejected</Badge> 
+                        : <Badge variant="outline" className="text-zinc-500 border-zinc-700">Check</Badge>}
                     </TableCell>
 
                     <TableCell>
@@ -172,7 +185,7 @@ export function PhotoDataTable({ data }: { data: PhotoMember[] }) {
                     </TableCell>
 
                     <TableCell className="text-right text-zinc-400 text-xs">
-                       {m.institution}
+                        {m.institution}
                     </TableCell>
                   </TableRow>
                   
@@ -281,9 +294,33 @@ export function PhotoDataTable({ data }: { data: PhotoMember[] }) {
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    {/* Finalist Zone */}
+                                    <div className="border-t border-zinc-800 pt-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h4 className="text-xs font-bold uppercase text-amber-500 flex items-center gap-2">
+                                                <Trophy className="h-4 w-4" /> Finalist Stage
+                                            </h4>
+                                            <div className="flex items-center space-x-2">
+                                                <Label htmlFor={`finalist-${m.account_id}`} className="text-xs text-zinc-400">Is Finalist?</Label>
+                                                <Switch 
+                                                    id={`finalist-${m.account_id}`} 
+                                                    checked={!!m.is_finalist}
+                                                    onCheckedChange={(checked: boolean) => handleToggleFinalist(m.account_id, checked)}
+                                                />
+                                            </div>
+                                        </div>
 
+                                        {m.is_finalist && (
+                                            <div className="bg-amber-500/5 p-4 rounded border border-amber-500/10">
+                                                <h6 className="text-[10px] text-amber-500/70 uppercase font-bold mb-2 flex items-center gap-2">
+                                                    <ThumbsUp className="h-3 w-3"/> Engagement
+                                                </h6>
+                                                <DocRow label="Engagement Proof" link={m.ed_link} verified={m.ed_verified} field="ed_verified" id={m.account_id} />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-
                             </div>
                         </div>
                       </TableCell>

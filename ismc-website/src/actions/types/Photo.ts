@@ -23,7 +23,11 @@ export type PhotoMember = {
 
   od_link: string | null; // Originality
   od_verified: number;
-  
+
+  is_finalist: boolean; 
+  ed_link: string | null;
+  ed_verified: number;
+
   status: number;
   notes: string[] | null;
 };

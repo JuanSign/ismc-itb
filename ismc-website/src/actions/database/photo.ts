@@ -23,20 +23,20 @@ export async function fetchPhotoPageData(accountId: string) {
 
 export async function updateMemberDetails(
   accountId: string,
-  name: string,
-  institution: string,
-  phoneNum: string,
-  idNo: string,
+  name: string | null,
+  institution: string | null,
+  phoneNum: string | null,
+  idNo: string | null,
   scKey: string | null,
   fpKey: string | null
 ) {
   await DB`
     UPDATE photo_member
     SET
-      name = ${name},
-      institution = ${institution},
-      phone_num = ${phoneNum},
-      id_no = ${idNo},
+      name = COALESCE(${name}, name),
+      institution = COALESCE(${institution}, institution),
+      phone_num = COALESCE(${phoneNum}, phone_num),
+      id_no = COALESCE(${idNo}, id_no),
 
       sc_link = COALESCE(${scKey}::text, sc_link),
       sc_verified = CASE WHEN ${scKey}::text IS NOT NULL THEN 0 ELSE sc_verified END,
@@ -75,6 +75,16 @@ export async function updateSubmission(accountId: string, sdKey: string | null, 
             sd_link = COALESCE(${sdKey}::text, sd_link),
             sdd = ${description},
             sub_verified = 0
+        WHERE account_id = ${accountId}
+    `;
+}
+
+export async function updateEngagement(accountId: string, edKey: string | null) {
+    await DB`
+        UPDATE photo_member 
+        SET 
+            ed_link = COALESCE(${edKey}::text, ed_link),
+            ed_verified = CASE WHEN ${edKey}::text IS NOT NULL THEN 0 ELSE ed_verified END
         WHERE account_id = ${accountId}
     `;
 }

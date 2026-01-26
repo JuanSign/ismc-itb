@@ -9,12 +9,14 @@ import { refreshSession, verifySession } from "./session";
 import { DB } from "@/lib/DB";
 import { 
     registerUser, unregisterUser, fetchPhotoPageData,
-    updateMemberDetails as dbUpdateMember, updatePayment, updateOriginality, updateSubmission
+    updateMemberDetails as dbUpdateMember, updatePayment, updateOriginality, updateSubmission, updateEngagement as dbUpdateEngagement
 } from "@/actions/database/photo";
 import { addEventToAccount, removeEventFromAccount } from "@/actions/database/account";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSignedUrlForR2, uploadFileToR2, getPresignedUploadUrl } from "@/lib/R2";
+
+type FormState = { error?: string; message?: string };
 
 export async function registerPhoto(): Promise<RegisterPhotoState> {
     const session = await verifySession();
@@ -54,10 +56,23 @@ export async function getPhotoPageData() {
     const member = await fetchPhotoPageData(account_id);
     if (!member) redirect("/dashboard"); 
 
-    if(member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
-    if(member.pp_link) member.pp_link = await getSignedUrlForR2(member.pp_link);
-    if(member.od_link) member.od_link = await getSignedUrlForR2(member.od_link);
-    if(member.sd_link) member.sd_link = await getSignedUrlForR2(member.sd_link);
+    const signLink = async (link: string | null) => link ? await getSignedUrlForR2(link) : null;
+
+    const [fp, pp, od, sd, ed, sc] = await Promise.all([
+        signLink(member.fp_link),
+        signLink(member.pp_link),
+        signLink(member.od_link),
+        signLink(member.sd_link),
+        signLink(member.ed_link),
+        signLink(member.sc_link)
+    ]);
+
+    member.fp_link = fp;
+    member.pp_link = pp;
+    member.od_link = od;
+    member.sd_link = sd;
+    member.ed_link = ed;
+    member.sc_link = sc;
 
     return { member, currentUserAccountId: account_id };
 }
@@ -70,12 +85,18 @@ export async function getMemberDocuments(targetAccountId: string) {
         const result = await DB`SELECT * FROM photo_member WHERE account_id = ${targetAccountId}`;
         if (result.length === 0) return null;
         
-        const member = result[0];
+        const member = result[0] as PhotoMember;
+        
+        // Parallel signing for efficiency
+        const [sc, fp] = await Promise.all([
+            member.sc_link ? getSignedUrlForR2(member.sc_link) : Promise.resolve(null),
+            member.fp_link ? getSignedUrlForR2(member.fp_link) : Promise.resolve(null)
+        ]);
 
-        if (member.sc_link) member.sc_link = await getSignedUrlForR2(member.sc_link);
-        if (member.fp_link) member.fp_link = await getSignedUrlForR2(member.fp_link);
+        member.sc_link = sc;
+        member.fp_link = fp;
 
-        return member as PhotoMember;
+        return member;
     } catch (error) {
         console.error("Error fetching member docs:", error);
         return null;
@@ -93,10 +114,7 @@ export async function updateMemberDetails(prevState: UpdateMemberFormState, form
         const phoneNum = formData.get("phone_num") as string;
         const idNo = formData.get("id_no") as string;
         
-        const scKey = null;
-        const fpKey = null;
-
-        await dbUpdateMember(account_id, name, institution, phoneNum, idNo, scKey, fpKey);
+        await dbUpdateMember(account_id, name, institution, phoneNum, idNo, null, null);
         revalidatePath("/dashboard/photo");
         return { message: "Details saved successfully." };
     } catch (e) {
@@ -120,11 +138,10 @@ export async function uploadMemberDocument(
         const keyPrefix = docType === 'sc' ? 'photo-sc' : 'photo-fp';
         const fileKey = await uploadFileToR2(file, keyPrefix, targetAccountId);
 
-        if (docType === 'sc') {
-            await DB`UPDATE photo_member SET sc_link = ${fileKey}, sc_verified = 0 WHERE account_id = ${targetAccountId}`;
-        } else {
-            await DB`UPDATE photo_member SET fp_link = ${fileKey}, fp_verified = 0 WHERE account_id = ${targetAccountId}`;
-        }
+        await dbUpdateMember(targetAccountId, null, null, null, null, 
+            docType === 'sc' ? fileKey : null, 
+            docType === 'fp' ? fileKey : null
+        );
 
         revalidatePath("/dashboard/photo");
         return { success: true, message: "File uploaded successfully" };
@@ -151,15 +168,37 @@ export async function updateBilling(prevState: UpdateBillingFormState, formData:
     } catch { return { error: "Error uploading payment proof." }; }
 }
 
+export async function updateEngagement(prevState: FormState, formData: FormData): Promise<FormState> {
+    const session = await verifySession();
+    if (!session) return { error: "Not authenticated." };
+    const { account_id } = session;
+
+    try {
+        const edKey = formData.get("engagement_key") as string;
+        if (!edKey) return { error: "Missing file key." };
+        
+        await dbUpdateEngagement(account_id, edKey);
+        revalidatePath("/dashboard/photo");
+        return { message: "Engagement proof submitted successfully." };
+    } catch { return { error: "Error submitting engagement proof." }; }
+}
+
 export async function getPresignedUrl(
-    docType: 'submission' | 'originality', 
+    docType: 'submission' | 'originality' | 'engagement', 
     fileName: string, 
     fileType: string
 ) {
     const session = await verifySession();
     if (!session) return { error: "Unauthorized" };
 
-    const folder = docType === 'submission' ? 'photo-sd' : 'photo-od';
+    const FOLDER_MAP = {
+        submission: 'photo-sd',
+        originality: 'photo-od',
+        engagement: 'photo-ed'
+    };
+
+    const folder = FOLDER_MAP[docType];
+    if (!folder) return { error: "Invalid document type" };
 
     try {
         return await getPresignedUploadUrl(folder, fileName, fileType, session.account_id);
