@@ -23,6 +23,7 @@ import { PaymentSection } from "@/components/Competition/general/PaymentSection"
 import { SubmissionSection } from "@/components/Competition/hack/SubmissionSection";
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
 import { Toaster } from "sonner";
+import { FinalistSection } from "@/components/Competition/hack/FinalistSection";
 
 const GLASS_CARD = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
 
@@ -239,6 +240,13 @@ export default async function HackathonTeamPage() {
             />
         )}
 
+        <FinalistSection 
+           isFinalist={team.is_finalist}
+           finalPdf={team.final_pdf_path}
+           finalLinks={team.final_links}
+           finalSlides={team.final_slides_path}
+        />
+        
       </div>
     </div>
   );

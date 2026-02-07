@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// --- Domain Types ---
 export type TeamHack = {
   team_id: string;
   name: string;
@@ -12,12 +11,17 @@ export type TeamHack = {
   pp_link: string | null;
   pp_verified: number;
 
-  sd_link: string | null; // Submission Document
-  sdd: string | null;     // Submission Description
+  sd_link: string | null;
+  sdd: string | null;
   od_link: string | null;
   od_verified: number;
   sub_verified: number;
-  ext_link: string[] | null; // External Links
+  ext_link: string[] | null;
+
+  is_finalist: boolean;
+  final_pdf_path: string | null;
+  final_links: { title: string; url: string }[] | null;
+  final_slides_path: string | null;
 }
 
 export type MemberHack = {

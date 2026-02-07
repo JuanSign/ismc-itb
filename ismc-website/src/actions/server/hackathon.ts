@@ -154,7 +154,12 @@ export async function getTeamPageData() {
         if(data.team.pp_link) data.team.pp_link = await getSignedUrlForR2(data.team.pp_link);
         if(data.team.sd_link) data.team.sd_link = await getSignedUrlForR2(data.team.sd_link);
         if(data.team.od_link) data.team.od_link = await getSignedUrlForR2(data.team.od_link);
-        
+        if(data.team.final_pdf_path) {
+            data.team.final_pdf_path = await getSignedUrlForR2(data.team.final_pdf_path);
+        }
+        if(data.team.final_slides_path) {
+            data.team.final_slides_path = await getSignedUrlForR2(data.team.final_slides_path);
+        }
         return data;
     } catch (e) {
         if ((e as Error).message === "User not assigned to a team.") {
@@ -319,4 +324,54 @@ export async function submitProject(
         console.error("Submit Project Error:", e);
         return { error: "An error occurred during submission." };
     }
+}
+
+export async function getFinalistUploadUrl(fileName: string, fileType: string, type: 'pdf' | 'slides') {
+  const session = await verifySession();
+  if (!session) throw new Error("Unauthorized");
+
+  const teamId = await getTeamId(session.account_id);
+
+  const folder = type === 'pdf' ? 'finals/pdf' : 'finals/slides';
+  
+  const { signedUrl, key } = await getPresignedUploadUrl(folder, fileName, fileType, teamId);
+
+  return { signedUrl, key };
+}
+
+export async function saveFinalistProject(fileKey: string, links: { title: string; url: string }[]) {
+  const session = await verifySession();
+  if (!session) throw new Error("Unauthorized");
+  const teamId = await getTeamId(session.account_id);
+
+  const team = await DB`SELECT final_pdf_path FROM hack_team WHERE team_id = ${teamId}`;
+  if (team[0].final_pdf_path) {
+    throw new Error("Submission already exists. Cannot overwrite.");
+  }
+
+  await DB`
+    UPDATE hack_team 
+    SET 
+      final_pdf_path = ${fileKey},
+      final_links = ${JSON.stringify(links)}
+    WHERE team_id = ${teamId}
+  `;
+
+  revalidatePath("/dashboard/hackathon");
+  return { success: true };
+}
+
+export async function saveFinalistSlides(fileKey: string) {
+  const session = await verifySession();
+  if (!session) throw new Error("Unauthorized");
+  const teamId = await getTeamId(session.account_id);
+
+  await DB`
+    UPDATE hack_team 
+    SET final_slides_path = ${fileKey}
+    WHERE team_id = ${teamId}
+  `;
+
+  revalidatePath("/dashboard/hackathon");
+  return { success: true };
 }
