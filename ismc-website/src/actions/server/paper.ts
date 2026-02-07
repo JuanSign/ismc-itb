@@ -118,6 +118,9 @@ export async function getTeamPageData() {
         if(data.team.pp_link) data.team.pp_link = await getSignedUrlForR2(data.team.pp_link);
         if(data.team.sd_link) data.team.sd_link = await getSignedUrlForR2(data.team.sd_link);
         if(data.team.od_link) data.team.od_link = await getSignedUrlForR2(data.team.od_link);
+        if(data.team.final_paper_path) {
+            data.team.final_paper_path = await getSignedUrlForR2(data.team.final_paper_path);
+        }
         
         return data;
     } catch (e) {
@@ -268,4 +271,34 @@ export async function submitPaper(prevState: SubmitPaperFormState, formData: For
         console.error("Submit Paper Error:", e);
         return { error: "Error submitting paper." };
     }
+}
+
+export async function getPaperFinalistUploadUrl(fileName: string, fileType: string) {
+  const session = await verifySession();
+  if (!session) throw new Error("Unauthorized");
+  const teamId = await getTeamId(session.account_id);
+
+  const { signedUrl, key } = await getPresignedUploadUrl("paper-finals", fileName, fileType, teamId);
+
+  return { signedUrl, key };
+}
+
+export async function saveFinalistPaper(fileKey: string) {
+  const session = await verifySession();
+  if (!session) throw new Error("Unauthorized");
+  const teamId = await getTeamId(session.account_id);
+
+  const team = await DB`SELECT final_paper_path FROM paper_team WHERE team_id = ${teamId}`;
+  if (team[0].final_paper_path) {
+    throw new Error("Final paper has already been submitted. Cannot overwrite.");
+  }
+
+  await DB`
+    UPDATE paper_team 
+    SET final_paper_path = ${fileKey}
+    WHERE team_id = ${teamId}
+  `;
+
+  revalidatePath("/dashboard/paper");
+  return { success: true };
 }

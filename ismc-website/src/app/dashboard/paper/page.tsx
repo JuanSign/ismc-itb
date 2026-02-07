@@ -14,6 +14,7 @@ import { PaymentSection } from "@/components/Competition/general/PaymentSection"
 import { MemberStatusBadge } from "@/components/Competition/general/MemberStatusBadge";
 import { SubmissionSection } from "@/components/Competition/paper/SubmissionSection";
 import { Toaster } from "sonner";
+import { PaperFinalistSection } from "@/components/Competition/paper/FinalistSection";
 
 // --- Helper: Initials ---
 function getInitials(name: string | null, email: string) {
@@ -178,6 +179,11 @@ export default async function PaperTeamPage() {
                 className={`border-l-indigo-500 ${GLASS_CARD}`} 
             />
         )}
+
+        <PaperFinalistSection 
+            isFinalist={team.is_finalist}
+            finalPaper={team.final_paper_path}
+        />
 
       </div>
     </div>

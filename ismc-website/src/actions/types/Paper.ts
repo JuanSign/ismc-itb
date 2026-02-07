@@ -12,12 +12,15 @@ export type TeamPaper = {
   pp_link: string | null;
   pp_verified: number;
 
-  sd_link: string | null; // Submission Document (Abstract/Full Paper)
-  sdd: string | null;     // Submission Description (Title/Theme/Abstract Text)
+  sd_link: string | null;
+  sdd: string | null;
   sub_verified: number;
 
-  od_link: string | null; // Proof of Originality
+  od_link: string | null;
   od_verified: number;
+
+  is_finalist: boolean;
+  final_paper_path: string | null;
 }
 
 export type MemberPaper = {
