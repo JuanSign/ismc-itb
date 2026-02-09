@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, Search, FileText, Download, Loader2, Send, Trash2, Check, X, Link as LinkIcon, AlignLeft } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, FileText, Download, Loader2, Send, Trash2, Check, X, Link as LinkIcon, AlignLeft, Trophy, Presentation, FileCode, LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getSignedDocUrl, updateHackStatus } from "@/actions/server/admin_hackathon";
 import { HackMemberManager } from "./HackMemberManager";
@@ -71,7 +71,6 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
 
   const handleSubmissionDecision = async (teamId: string, decision: 'accept' | 'reject') => {
     setVerifyingSub(teamId);
-    
     if (decision === 'accept') {
         await updateHackStatus(teamId, 'team', 'sub_verified', 2);
         await updateHackStatus(teamId, 'team', 'od_verified', 2);
@@ -88,7 +87,7 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
     team.code.toLowerCase().includes(search.toLowerCase())
   );
 
-  const TeamDocRow = ({ label, link, verified, field, teamId, hideAuth = false }: { label: string, link: string | null, verified: number, field: string, teamId: string, hideAuth?: boolean }) => (
+  const TeamDocRow = ({ label, link, verified, field, teamId, hideAuth = false, icon: Icon = Download }: { label: string, link: string | null, verified?: number, field?: string, teamId: string, hideAuth?: boolean, icon?: LucideIcon }) => (
     <div className="flex items-center justify-between p-2.5 bg-zinc-900/50 rounded border border-zinc-800 mb-2">
         <div className="flex items-center gap-3">
              <Button 
@@ -98,17 +97,19 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                 onClick={() => openTeamDoc(link)}
                 disabled={!link}
              >
-                {loadingDoc === link ? <Loader2 className="h-3 w-3 animate-spin"/> : <Download className="h-3 w-3 mr-1.5"/>}
+                {loadingDoc === link ? <Loader2 className="h-3 w-3 animate-spin"/> : <Icon className="h-3 w-3 mr-1.5"/>}
                 {label}
              </Button>
              {!link && <span className="text-[10px] text-zinc-600 italic">Not uploaded</span>}
         </div>
         <div className="flex items-center gap-1">
-             {verified === 2 ? <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] hover:bg-emerald-500/20">Verified</Badge> 
-             : verified === 1 ? <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] hover:bg-red-500/20">Rejected</Badge> 
-             : <Badge variant="outline" className="text-zinc-500 border-zinc-700 text-[10px]">Pending</Badge>}
+             {verified !== undefined && (
+                verified === 2 ? <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] hover:bg-emerald-500/20">Verified</Badge> 
+                : verified === 1 ? <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] hover:bg-red-500/20">Rejected</Badge> 
+                : <Badge variant="outline" className="text-zinc-500 border-zinc-700 text-[10px]">Pending</Badge>
+             )}
              
-             {(link && !hideAuth) && (
+             {(link && !hideAuth && field) && (
                  <div className="flex items-center gap-1 ml-2">
                     <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-emerald-500/20 hover:text-emerald-400 text-zinc-600" onClick={() => handleVerifyTeamDoc(teamId, field, 2)}>
                         <Check className="h-3 w-3" />
@@ -154,7 +155,7 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
               filteredData.map((team) => (
                 <Fragment key={team.team_id}>
                   <TableRow 
-                    className={`border-zinc-800 transition-colors cursor-pointer ${expandedRows.has(team.team_id) ? 'bg-zinc-900/60' : 'hover:bg-zinc-900/40'}`}
+                    className={`border-zinc-800 transition-colors cursor-pointer ${expandedRows.has(team.team_id) ? 'bg-zinc-900/60' : 'hover:bg-zinc-900/40'} ${team.is_finalist ? 'bg-amber-950/10' : ''}`}
                     onClick={() => toggleRow(team.team_id)}
                   >
                     <TableCell onClick={(e) => e.stopPropagation()}>
@@ -162,7 +163,16 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                         {expandedRows.has(team.team_id) ? <ChevronDown className="h-4 w-4"/> : <ChevronRight className="h-4 w-4"/>}
                       </Button>
                     </TableCell>
-                    <TableCell className="font-medium text-zinc-200 text-base">{team.name}</TableCell>
+                    
+                    <TableCell className="font-medium text-zinc-200 text-base">
+                        <div className="flex items-center gap-2">
+                            {team.is_finalist && (
+                                <Trophy className="h-4 w-4 text-amber-500" fill="currentColor" />
+                            )}
+                            {team.name}
+                        </div>
+                    </TableCell>
+                    
                     <TableCell className="font-mono text-zinc-500 text-xs">{team.code}</TableCell>
                     
                     <TableCell>{getTeamStatusBadge(team.status)}</TableCell>
@@ -181,7 +191,7 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                   {expandedRows.has(team.team_id) && (
                     <TableRow className="bg-black border-b border-zinc-800 hover:bg-black">
                       <TableCell colSpan={6} className="p-0">
-                        <div className="p-6 border-l-2 border-blue-600 bg-zinc-950/30 shadow-inner">
+                        <div className={`p-6 border-l-2 ${team.is_finalist ? 'border-amber-500' : 'border-blue-600'} bg-zinc-950/30 shadow-inner`}>
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                 
                                 <div className="lg:col-span-4 space-y-6">
@@ -203,6 +213,15 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                                             <SelectItem value="3">3 - Accepted</SelectItem>
                                           </SelectContent>
                                         </Select>
+                                        
+                                        {/* Status Toggle Visualizer (Read Only if no action provided) */}
+                                        <div className="mt-4 flex items-center justify-between p-2 rounded border border-zinc-800 bg-zinc-950">
+                                            <span className="text-xs text-zinc-400 font-medium">Is Finalist?</span>
+                                            {team.is_finalist ? 
+                                                <Badge className="bg-amber-500 text-black hover:bg-amber-600">YES</Badge> : 
+                                                <Badge variant="outline" className="text-zinc-600">NO</Badge>
+                                            }
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2">
@@ -211,6 +230,7 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                                         
                                         <div className="my-2 border-t border-zinc-800/50"></div>
                                         
+                                        {/* Submission Section */}
                                         <div className={`p-3 rounded border transition-colors ${
                                             team.sub_verified === 2 ? 'bg-emerald-950/10 border-emerald-500/20' :
                                             team.sub_verified === 1 ? 'bg-red-950/10 border-red-500/20' :
@@ -280,21 +300,70 @@ export function HackDataTable({ data }: { data: HackTeam[] }) {
                                                 </Button>
                                             </div>
                                         </div>
+
+                                        {/* NEW: Finalist Section */}
+                                        {team.is_finalist && (
+                                            <div className="p-3 rounded border border-amber-500/30 bg-amber-500/5 mt-4">
+                                                <div className="flex items-center gap-2 text-amber-400 mb-3">
+                                                    <Trophy className="h-3 w-3" />
+                                                    <h5 className="text-[10px] font-bold uppercase">Final Round Materials</h5>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <TeamDocRow 
+                                                        label="Final Slides" 
+                                                        link={team.final_slides_path} 
+                                                        teamId={team.team_id} 
+                                                        hideAuth={true} 
+                                                        icon={Presentation}
+                                                    />
+                                                    <TeamDocRow 
+                                                        label="Final PDF" 
+                                                        link={team.final_pdf_path} 
+                                                        teamId={team.team_id} 
+                                                        hideAuth={true} 
+                                                        icon={FileCode}
+                                                    />
+                                                </div>
+
+                                                {team.final_links && team.final_links.length > 0 ? (
+                                                     <div className="flex flex-col gap-1 mt-3">
+                                                        {team.final_links.map((link, i) => (
+                                                            <a key={i} href={link.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 bg-zinc-900 border border-zinc-800 rounded hover:bg-zinc-800 transition-colors text-xs text-amber-400/80 hover:text-amber-400">
+                                                                <LinkIcon className="h-3 w-3" />
+                                                                <span className="font-semibold mr-1 text-zinc-400">[{link.title}]</span>
+                                                                <span className="truncate opacity-70">{link.url}</span>
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-[10px] text-zinc-600 italic mt-2 ml-1">No final links provided.</div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="space-y-3 pt-4 border-t border-zinc-800">
                                         <h4 className="text-xs font-bold uppercase text-zinc-500">Admin Notes</h4>
                                         <div className="space-y-2">
                                             {team.notes && team.notes.map((n, i) => (
-                                                <div key={i} className="flex justify-between gap-2 p-2 bg-zinc-900 rounded border border-zinc-800 text-xs text-zinc-400 group">
-                                                    <span>{n}</span>
-                                                    <button onClick={() => handleDeleteNote(team.team_id, n)} className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="h-3 w-3"/></button>
+                                                <div key={i} className="flex justify-between items-start gap-2 p-2 bg-zinc-900 rounded border border-zinc-800 text-xs text-zinc-400 group">
+                                                    {/* Fix: break-words handles text wrapping, whitespace-pre-wrap preserves newlines */}
+                                                    <span className="wrap-break-word whitespace-pre-wrap">{n}</span>
+                                                    
+                                                    {/* Fix: shrink-0 prevents the button from being crushed */}
+                                                    <button 
+                                                        onClick={() => handleDeleteNote(team.team_id, n)} 
+                                                        className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
+                                                    >
+                                                        <Trash2 className="h-3 w-3"/>
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
                                         <form action={(fd) => handleAddNote(team.team_id, fd)} className="flex gap-2">
                                             <Input name="note" placeholder="Add note..." className="h-8 text-xs bg-zinc-900 border-zinc-800 focus-visible:ring-zinc-700"/>
-                                            <Button size="icon" className="h-8 w-8 bg-zinc-800 hover:bg-zinc-700"><Send className="h-3 w-3"/></Button>
+                                            <Button size="icon" className="h-8 w-8 bg-zinc-800 hover:bg-zinc-700 shrink-0"><Send className="h-3 w-3"/></Button>
                                         </form>
                                     </div>
                                 </div>

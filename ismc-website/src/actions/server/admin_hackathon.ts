@@ -18,7 +18,7 @@ export async function getHackathonData() {
     FROM hack_team t
     LEFT JOIN hack_member m ON t.team_id = m.team_id
     GROUP BY t.team_id
-    ORDER BY t.code ASC;
+    ORDER BY t.is_finalist DESC, t.name ASC;
   `;
   return data as HackTeam[]; 
 }

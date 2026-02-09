@@ -339,7 +339,7 @@ export async function getFinalistUploadUrl(fileName: string, fileType: string, t
   return { signedUrl, key };
 }
 
-export async function saveFinalistProject(fileKey: string, links: { title: string; url: string }[]) {
+export async function saveFinalistProject(fileKey: string | null, links: { title: string; url: string }[]) {
   const session = await verifySession();
   if (!session) throw new Error("Unauthorized");
   const teamId = await getTeamId(session.account_id);

@@ -27,9 +27,9 @@ import {
 
 type FinalistProps = {
   isFinalist: boolean;
-  finalPdf: string | null; // Signed URL from server
+  finalPdf: string | null; 
   finalLinks: { title: string; url: string }[] | null;
-  finalSlides: string | null; // Signed URL from server
+  finalSlides: string | null; 
 };
 
 const GLASS_CARD = "bg-slate-950/60 backdrop-blur-md border-white/10 text-slate-100 shadow-xl";
@@ -63,17 +63,29 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
   };
 
   const onSubmitProject = async () => {
-    if (!pdfFile) return toast.error("Please select a PDF file.");
+    // 1. Validate Links (Mandatory)
+    const validLinks = links.filter(l => l.title.trim() !== "" && l.url.trim() !== "");
+    if (validLinks.length === 0) {
+        return toast.error("Please provide at least one valid link (e.g. Github Repo).");
+    }
+
     setLoading(true);
-    const toastId = toast.loading("Uploading Final Project...");
+    const toastId = toast.loading("Submitting Final Project...");
+    
     try {
-      const fileKey = await uploadToR2(pdfFile, 'pdf');
-      const validLinks = links.filter(l => l.title.trim() !== "" && l.url.trim() !== "");
+      let fileKey = null;
+
+      if (pdfFile) {
+          toast.loading("Uploading PDF...", { id: toastId });
+          fileKey = await uploadToR2(pdfFile, 'pdf');
+      }
+
       await saveFinalistProject(fileKey, validLinks);
       toast.success("Final submission received!", { id: toastId });
+
     } catch (e) {
       console.error(e);
-      toast.error("Upload failed. Please try again.", { id: toastId });
+      toast.error("Submission failed. Please try again.", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -96,7 +108,11 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
     }
   };
 
-  const isProjectSubmitted = !!finalPdf;
+  // Determine if submitted based on PDF OR Links existence
+  const isProjectSubmitted = !!finalPdf || (finalLinks && finalLinks.length > 0);
+  
+  // Check if user has entered at least one link for the button disable state
+  const hasValidLinkInput = links.some(l => l.title.trim() !== "" && l.url.trim() !== "");
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -113,8 +129,8 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
             Final Project Materials
           </CardTitle>
           <CardDescription className="text-slate-400">
-             Submit your Final PDF and Related Links. <br/>
-             <span className="text-amber-400/90 font-bold text-xs uppercase tracking-wider">Warning: One-time submission only</span>
+              Submit your Project Links and PDF (Optional). <br/>
+              <span className="text-amber-400/90 font-bold text-xs uppercase tracking-wider">Warning: One-time submission only</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -125,15 +141,21 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
                  Submission Received
               </div>
               <div className="grid gap-2 text-sm text-slate-300">
-                {/* FIX FOR LINKS: ensuring target="_blank" works */}
-                <a href={finalPdf} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors bg-white/5 p-2 rounded border border-white/5 group">
-                    <FileText className="w-4 h-4 text-emerald-500"/>
-                    <span className="underline decoration-emerald-500/50 group-hover:decoration-emerald-400">View Submitted PDF</span>
-                    <ExternalLink className="w-3 h-3 ml-auto opacity-50"/>
-                </a>
+                {/* PDF Link - Only show if it exists */}
+                {finalPdf ? (
+                    <a href={finalPdf} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors bg-white/5 p-2 rounded border border-white/5 group">
+                        <FileText className="w-4 h-4 text-emerald-500"/>
+                        <span className="underline decoration-emerald-500/50 group-hover:decoration-emerald-400">View Submitted PDF</span>
+                        <ExternalLink className="w-3 h-3 ml-auto opacity-50"/>
+                    </a>
+                ) : (
+                    <div className="flex items-center gap-2 text-slate-500 italic text-xs p-2">
+                        <FileText className="w-4 h-4 opacity-50"/> No PDF Submitted
+                    </div>
+                )}
                 
                 {finalLinks && finalLinks.length > 0 && (
-                   <div className="flex flex-col gap-1 mt-1">
+                    <div className="flex flex-col gap-1 mt-1">
                       <span className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Links</span>
                       {finalLinks.map((l, i) => (
                         <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors bg-white/5 p-2 rounded border border-white/5">
@@ -142,7 +164,7 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
                             <ExternalLink className="w-3 h-3 ml-auto opacity-50"/>
                         </a>
                       ))}
-                   </div>
+                    </div>
                 )}
               </div>
             </div>
@@ -150,7 +172,10 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
             <div className="space-y-6">
               {/* CUSTOM FILE INPUT UI */}
               <div className="space-y-2">
-                <Label>Final PDF Document</Label>
+                <Label className="flex items-center gap-2">
+                    Final PDF Document 
+                    <span className="text-xs text-slate-500 font-normal">(Optional)</span>
+                </Label>
                 
                 {/* Hidden Input */}
                 <input 
@@ -178,9 +203,12 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
                 </div>
               </div>
 
-              {/* Links Section (Same as before) */}
+              {/* Links Section */}
               <div className="space-y-3">
-                <Label>External Links (Repos, Demo, Drive)</Label>
+                <Label className="flex items-center gap-2">
+                    External Links 
+                    <span className="text-xs text-amber-500 font-normal">(Required, at least 1)</span>
+                </Label>
                 
                 {links.map((link, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
@@ -205,7 +233,6 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
                       }}
                     />
                     
-                    {/* Remove Button (Only show if more than 1 link) */}
                     {links.length > 1 && (
                       <Button 
                         type="button"
@@ -222,7 +249,6 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
                   </div>
                 ))}
 
-                {/* Add Link Button */}
                 <Button 
                   type="button"
                   variant="outline" 
@@ -234,11 +260,10 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
                 </Button>
               </div>
 
-              {/* Confirmation Dialog (Same as before) */}
               <AlertDialog>
-                 {/* ... (Same trigger and content) ... */}
                  <AlertDialogTrigger asChild>
-                    <Button className="w-full bg-amber-600 hover:bg-amber-700 text-black font-bold" disabled={loading || !pdfFile}>
+                    {/* DISABLED logic changed: Checks for links, not PDF */}
+                    <Button className="w-full bg-amber-600 hover:bg-amber-700 text-black font-bold" disabled={loading || !hasValidLinkInput}>
                         {loading ? <Loader2 className="animate-spin mr-2" /> : null}
                         Submit Final Materials
                     </Button>
@@ -247,8 +272,12 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription className="text-slate-400">
-                      This action cannot be undone. Once submitted, you cannot edit your Final PDF or Links. 
-                      Please verify all files and URLs before confirming.
+                      This action cannot be undone. You are submitting:
+                      <ul className="list-disc list-inside mt-2 mb-2 text-slate-300">
+                        <li>{pdfFile ? "1 PDF Document" : "No PDF Document"}</li>
+                        <li>{links.filter(l => l.url.trim() !== "").length} External Link(s)</li>
+                      </ul>
+                      Once submitted, you cannot edit these details.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -264,10 +293,9 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
         </CardContent>
       </Card>
 
-      {/* --- PART 2: PRESENTATION SLIDES --- */}
+      {/* --- PART 2: PRESENTATION SLIDES (Unchanged) --- */}
       <Card className={`border-l-4 border-l-rose-500 ${GLASS_CARD}`}>
         <CardHeader>
-           {/* ... Header ... */}
            <CardTitle className="text-xl flex items-center gap-2 text-rose-50">
             <Presentation className="w-5 h-5 text-rose-500" />
             Presentation Slides
@@ -278,10 +306,8 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
-             <div className="grid w-full items-center gap-2">
+              <div className="grid w-full items-center gap-2">
                 <Label htmlFor="slides">Slides File</Label>
-                
-                {/* Hidden Input for Slides */}
                 <input 
                   type="file" 
                   ref={slidesInputRef}
@@ -289,7 +315,6 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
                   onChange={(e) => setSlidesFile(e.target.files?.[0] || null)}
                 />
 
-                {/* Custom Trigger for Slides */}
                 <div className="flex items-center gap-3 w-full">
                     <Button 
                         type="button" 
@@ -310,12 +335,11 @@ export function FinalistSection({ isFinalist, finalPdf, finalLinks, finalSlides 
              </Button>
           </div>
           
-          {/* Link Display */}
           {finalSlides && (
             <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded flex justify-between items-center group">
               <span className="text-sm text-rose-200">Current Deck</span>
               <a href={finalSlides} target="_blank" rel="noopener noreferrer" className="text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 px-3 py-1 rounded border border-rose-500/30 transition-colors flex items-center gap-2">
-                 View Slides <ExternalLink className="w-3 h-3"/>
+                  View Slides <ExternalLink className="w-3 h-3"/>
               </a>
             </div>
           )}

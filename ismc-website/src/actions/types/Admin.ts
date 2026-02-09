@@ -49,7 +49,7 @@ export interface PaperTeam {
   members: MemberPaper[];
 }
 
-export interface HackTeam {
+export type HackTeam = {
   team_id: string;
   name: string;
   code: string;
@@ -57,18 +57,22 @@ export interface HackTeam {
   status: number;
   notes: string[] | null;
   
-  // Payment
   pp_link: string | null;
   pp_verified: number;
 
-  // Submission
-  od_link: string | null;       // Originality Document
-  sd_link: string | null;       // Document (PDF/PPT)
-  sdd: string | null;           // Description
-  sub_verified: number;         // Submission Verification
-  ext_link: string[] | null;    // External Links (GitHub, Figma, etc)
+  sd_link: string | null;
+  sdd: string | null;
+  od_link: string | null;
+  od_verified: number;
+  sub_verified: number;
+  ext_link: string[] | null;
 
-  members: MemberHack[];
+  is_finalist: boolean;
+  final_pdf_path: string | null;
+  final_links: { title: string; url: string }[] | null;
+  final_slides_path: string | null;
+  
+  members: MemberHack[]; 
 }
 
 export interface PosterMember {
