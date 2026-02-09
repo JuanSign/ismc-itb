@@ -25,7 +25,7 @@ export interface MCTeam {
   members: MemberMC[];
 }
 
-export interface PaperTeam {
+export type TeamPaper = {
   team_id: string;
   name: string;
   code: string;
@@ -33,21 +33,22 @@ export interface PaperTeam {
   status: number;
   notes: string[] | null;
   
-  // Payment
   pp_link: string | null;
   pp_verified: number;
 
-  // Submission (Abstract / Full Paper)
-  sd_link: string | null; 
-  sdd: string | null;     // Description/Title/Theme
+  sd_link: string | null;
+  sdd: string | null;
   sub_verified: number;
 
-  // Originality
-  od_link: string | null; 
+  od_link: string | null;
   od_verified: number;
 
+  is_finalist: boolean;
+  final_paper_path: string | null;
+  
   members: MemberPaper[];
 }
+
 
 export type HackTeam = {
   team_id: string;

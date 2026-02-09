@@ -3,9 +3,8 @@
 import { DB } from "@/lib/DB";
 import { getSignedUrlForR2 } from "@/lib/R2";
 import { revalidatePath } from "next/cache";
-import { PaperTeam } from "../types/Admin";
+import { TeamPaper } from "../types/Admin";
 
-// --- 1. Fetch Data ---
 export async function getPaperCompetitionData() {
   const data = await DB`
     SELECT 
@@ -19,9 +18,9 @@ export async function getPaperCompetitionData() {
     FROM paper_team t
     LEFT JOIN paper_member m ON t.team_id = m.team_id
     GROUP BY t.team_id
-    ORDER BY t.code ASC;
+    ORDER BY t.is_finalist DESC, t.code ASC;
   `;
-  return data as PaperTeam[]; 
+  return data as TeamPaper[]; 
 }
 
 // --- 2. Sign URL ---

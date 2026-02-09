@@ -6,13 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, Search, FileText, Download, Loader2, Send, Trash2, Check, X, AlignLeft } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, FileText, Download, Loader2, Send, Trash2, Check, X, AlignLeft, Trophy, FileCode, LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getSignedDocUrl, updatePaperStatus } from "@/actions/server/admin_paper";
 import { PaperMemberManager } from "./PaperMemberManager";
-import { PaperTeam } from "@/actions/types/Admin";
+import { TeamPaper } from "@/actions/types/Admin";
 
-// --- 1. UPDATED STATUS LOGIC ---
 const getTeamStatusBadge = (status: number) => {
     switch(status) {
         case 3: return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20">Accepted</Badge>;
@@ -23,7 +22,7 @@ const getTeamStatusBadge = (status: number) => {
     }
 };
 
-export function PaperDataTable({ data }: { data: PaperTeam[] }) {
+export function PaperDataTable({ data }: { data: TeamPaper[] }) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
@@ -74,27 +73,30 @@ export function PaperDataTable({ data }: { data: PaperTeam[] }) {
     team.code.toLowerCase().includes(search.toLowerCase())
   );
 
-  const TeamDocRow = ({ label, link, verified, field, teamId }: { label: string, link: string | null, verified: number, field: string, teamId: string }) => (
+  // Reusable component for File Rows with generic icon support
+  const TeamDocRow = ({ label, link, verified, field, teamId, hideAuth = false, icon: Icon = Download }: { label: string, link: string | null, verified?: number, field?: string, teamId: string, hideAuth?: boolean, icon?: LucideIcon }) => (
     <div className="flex items-center justify-between p-2.5 bg-zinc-900/50 rounded border border-zinc-800 mb-2">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 overflow-hidden">
              <Button 
                 variant="ghost" 
                 size="sm"
-                className="h-8 px-2 text-xs font-medium text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                className="h-8 px-2 text-xs font-medium text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 truncate max-w-full"
                 onClick={() => openTeamDoc(link)}
                 disabled={!link}
              >
-                {loadingDoc === link ? <Loader2 className="h-3 w-3 animate-spin"/> : <Download className="h-3 w-3 mr-1.5"/>}
-                {label}
+                {loadingDoc === link ? <Loader2 className="h-3 w-3 animate-spin shrink-0"/> : <Icon className="h-3 w-3 mr-1.5 shrink-0"/>}
+                <span className="truncate">{label}</span>
              </Button>
-             {!link && <span className="text-[10px] text-zinc-600 italic">Not uploaded</span>}
+             {!link && <span className="text-[10px] text-zinc-600 italic shrink-0">Not uploaded</span>}
         </div>
-        <div className="flex items-center gap-1">
-             {verified === 2 ? <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] hover:bg-emerald-500/20">Verified</Badge> 
-             : verified === 1 ? <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] hover:bg-red-500/20">Rejected</Badge> 
-             : <Badge variant="outline" className="text-zinc-500 border-zinc-700 text-[10px]">Pending</Badge>}
+        <div className="flex items-center gap-1 shrink-0 ml-2">
+             {verified !== undefined && (
+                verified === 2 ? <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] hover:bg-emerald-500/20">Verified</Badge> 
+                : verified === 1 ? <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] hover:bg-red-500/20">Rejected</Badge> 
+                : <Badge variant="outline" className="text-zinc-500 border-zinc-700 text-[10px]">Pending</Badge>
+             )}
              
-             {link && (
+             {(link && !hideAuth && field) && (
                  <div className="flex items-center gap-1 ml-2">
                     <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-emerald-500/20 hover:text-emerald-400 text-zinc-600" onClick={() => handleVerifyTeamDoc(teamId, field, 2)}>
                         <Check className="h-3 w-3" />
@@ -140,7 +142,7 @@ export function PaperDataTable({ data }: { data: PaperTeam[] }) {
               filteredData.map((team) => (
                 <Fragment key={team.team_id}>
                   <TableRow 
-                    className={`border-zinc-800 transition-colors cursor-pointer ${expandedRows.has(team.team_id) ? 'bg-zinc-900/60' : 'hover:bg-zinc-900/40'}`}
+                    className={`border-zinc-800 transition-colors cursor-pointer ${expandedRows.has(team.team_id) ? 'bg-zinc-900/60' : 'hover:bg-zinc-900/40'} ${team.is_finalist ? 'bg-amber-950/10' : ''}`}
                     onClick={() => toggleRow(team.team_id)}
                   >
                     <TableCell onClick={(e) => e.stopPropagation()}>
@@ -148,8 +150,21 @@ export function PaperDataTable({ data }: { data: PaperTeam[] }) {
                         {expandedRows.has(team.team_id) ? <ChevronDown className="h-4 w-4"/> : <ChevronRight className="h-4 w-4"/>}
                       </Button>
                     </TableCell>
-                    <TableCell className="font-medium text-zinc-200 text-base">{team.name}</TableCell>
-                    <TableCell className="font-mono text-zinc-500 text-xs">{team.code}</TableCell>
+                    
+                    {/* Truncated Name with Trophy */}
+                    <TableCell className="font-medium text-zinc-200 text-base max-w-[200px]">
+                        <div className="flex items-center gap-2 truncate">
+                            {team.is_finalist && (
+                                <Trophy className="h-4 w-4 text-amber-500 shrink-0" fill="currentColor" />
+                            )}
+                            <span className="truncate">{team.name}</span>
+                        </div>
+                    </TableCell>
+
+                    {/* Truncated Code */}
+                    <TableCell className="font-mono text-zinc-500 text-xs max-w-[120px]">
+                        <div className="truncate" title={team.code}>{team.code}</div>
+                    </TableCell>
                     
                     <TableCell>{getTeamStatusBadge(team.status)}</TableCell>
 
@@ -167,13 +182,13 @@ export function PaperDataTable({ data }: { data: PaperTeam[] }) {
                   {expandedRows.has(team.team_id) && (
                     <TableRow className="bg-black border-b border-zinc-800 hover:bg-black">
                       <TableCell colSpan={6} className="p-0">
-                        <div className="p-6 border-l-2 border-purple-600 bg-zinc-950/30 shadow-inner">
+                        {/* Dynamic Border Color: Purple (Normal) or Amber (Finalist) */}
+                        <div className={`p-6 border-l-2 ${team.is_finalist ? 'border-amber-500' : 'border-purple-600'} bg-zinc-950/30 shadow-inner`}>
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                 
                                 {/* LEFT: Team Admin */}
                                 <div className="lg:col-span-4 space-y-6">
                                     
-                                    {/* 2. UPDATED SELECTOR FOR NEW STATUSES */}
                                     <div className="p-4 rounded-lg bg-zinc-900/50 border border-zinc-800">
                                         <h4 className="text-xs font-bold uppercase text-zinc-500 mb-2">Change Status</h4>
                                         <Select 
@@ -181,7 +196,7 @@ export function PaperDataTable({ data }: { data: PaperTeam[] }) {
                                           value={String(team.status)} 
                                           onValueChange={(val) => handleUpdateTeamStatus(team.team_id, val)}
                                         >
-                                          <SelectTrigger className="bg-zinc-950 border-zinc-700 text-white">
+                                          <SelectTrigger className="bg-zinc-950 border-zinc-700 text-white w-full">
                                             <SelectValue placeholder="Select status" />
                                           </SelectTrigger>
                                           <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
@@ -191,6 +206,15 @@ export function PaperDataTable({ data }: { data: PaperTeam[] }) {
                                             <SelectItem value="3">3 - Accepted</SelectItem>
                                           </SelectContent>
                                         </Select>
+
+                                        {/* Status Toggle Visualizer */}
+                                        <div className="mt-4 flex items-center justify-between p-2 rounded border border-zinc-800 bg-zinc-950">
+                                            <span className="text-xs text-zinc-400 font-medium">Is Finalist?</span>
+                                            {team.is_finalist ? 
+                                                <Badge className="bg-amber-500 text-black hover:bg-amber-600">YES</Badge> : 
+                                                <Badge variant="outline" className="text-zinc-600">NO</Badge>
+                                            }
+                                        </div>
                                     </div>
 
                                     {/* Documents */}
@@ -201,36 +225,55 @@ export function PaperDataTable({ data }: { data: PaperTeam[] }) {
                                         
                                         <div className="my-2 border-t border-zinc-800/50"></div>
                                         
-                                        {/* 3. UPDATED SUBMISSION DETAILS SECTION */}
                                         <div className="bg-zinc-900/20 p-3 rounded border border-zinc-800/50">
                                             <div className="flex items-center gap-2 mb-2 text-purple-400">
                                                 <AlignLeft className="h-3 w-3" />
                                                 <h5 className="text-[10px] font-bold uppercase">Abstract / Submission</h5>
                                             </div>
                                             
-                                            {/* Always render container, show fallback text if empty */}
-                                            <div className="mb-3 p-2.5 bg-black rounded border border-zinc-800 text-xs text-zinc-300 max-h-32 overflow-y-auto custom-scrollbar whitespace-pre-wrap leading-relaxed">
+                                            {/* Note content wrapper with break-words */}
+                                            <div className="mb-3 p-2.5 bg-black rounded border border-zinc-800 text-xs text-zinc-300 max-h-32 overflow-y-auto custom-scrollbar whitespace-pre-wrap leading-relaxed wrap-break-word">
                                                 {team.sdd ? team.sdd : <span className="text-zinc-600 italic">No title/description submitted yet.</span>}
                                             </div>
                                             
                                             <TeamDocRow label="Submission File" link={team.sd_link} verified={team.sub_verified} field="sub_verified" teamId={team.team_id} />
                                         </div>
+
+                                        {/* NEW: Finalist Section for Paper */}
+                                        {team.is_finalist && (
+                                            <div className="p-3 rounded border border-amber-500/30 bg-amber-500/5 mt-4">
+                                                <div className="flex items-center gap-2 text-amber-400 mb-3">
+                                                    <Trophy className="h-3 w-3" />
+                                                    <h5 className="text-[10px] font-bold uppercase">Final Round Materials</h5>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <TeamDocRow 
+                                                        label="Final Paper (PDF)" 
+                                                        link={team.final_paper_path} 
+                                                        teamId={team.team_id} 
+                                                        hideAuth={true} 
+                                                        icon={FileCode}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Notes */}
+                                    {/* Notes with Overflow Fixes */}
                                     <div className="space-y-3 pt-4 border-t border-zinc-800">
                                         <h4 className="text-xs font-bold uppercase text-zinc-500">Admin Notes</h4>
                                         <div className="space-y-2">
                                             {team.notes && team.notes.map((n, i) => (
-                                                <div key={i} className="flex justify-between gap-2 p-2 bg-zinc-900 rounded border border-zinc-800 text-xs text-zinc-400 group">
-                                                    <span>{n}</span>
-                                                    <button onClick={() => handleDeleteNote(team.team_id, n)} className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="h-3 w-3"/></button>
+                                                <div key={i} className="flex justify-between items-start gap-2 p-2 bg-zinc-900 rounded border border-zinc-800 text-xs text-zinc-400 group">
+                                                    <span className="wrap-break-word whitespace-pre-wrap">{n}</span>
+                                                    <button onClick={() => handleDeleteNote(team.team_id, n)} className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"><Trash2 className="h-3 w-3"/></button>
                                                 </div>
                                             ))}
                                         </div>
                                         <form action={(fd) => handleAddNote(team.team_id, fd)} className="flex gap-2">
                                             <Input name="note" placeholder="Add note..." className="h-8 text-xs bg-zinc-900 border-zinc-800 focus-visible:ring-zinc-700"/>
-                                            <Button size="icon" className="h-8 w-8 bg-zinc-800 hover:bg-zinc-700"><Send className="h-3 w-3"/></Button>
+                                            <Button size="icon" className="h-8 w-8 bg-zinc-800 hover:bg-zinc-700 shrink-0"><Send className="h-3 w-3"/></Button>
                                         </form>
                                     </div>
                                 </div>

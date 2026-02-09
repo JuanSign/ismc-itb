@@ -34,8 +34,6 @@ export default async function PaperAdminPage() {
         </div>
 
         <div className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-           {/* We force cast to any to avoid strict TS mismatch if DB returns slightly different structure, 
-               but the types should match given the setup. */}
            <PaperDataTable data={data} />
         </div>
 
