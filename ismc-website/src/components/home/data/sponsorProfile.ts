@@ -22,6 +22,11 @@ export const featuredSponsors: SponsorProfile[] = [
     logo: "/sponsors/logo/PT Arutmin.jpg",
   },
   {
+    name: "PT BSSR",
+    youtubeVideoId: "KsLo-Vm-wuo",
+    logo: "",
+  },
+  {
     name: "PT Geo Mining Berkah",
     youtubeVideoId: "tnNUWZSwDNM",
     logo: "/sponsors/logo/PT Geo Mining Berkah.png",
@@ -35,5 +40,60 @@ export const featuredSponsors: SponsorProfile[] = [
     name: "PT J Resources",
     youtubeVideoId: "jdCRW0GrXgo",
     logo: "/sponsors/logo/J Resources.jpeg",
+  },
+  {
+    name: "PT KKP",
+    youtubeVideoId: "fI6iiXxDQ_w",
+    logo: "",
+  },
+  {
+    name: "PT Orica Mining Services",
+    youtubeVideoId: "PGyMlEw9oac",
+    logo: "",
+  },
+  {
+    name: "PT Pertamina Patra Niaga",
+    youtubeVideoId: "OVvotU9O72s",
+    logo: "",
+  },
+  {
+    name: "PT PKN Resources",
+    youtubeVideoId: "eSnoI5N7SgQ",
+    logo: "",
+  },
+  {
+    name: "PT Vale",
+    youtubeVideoId: "MzWT4XYqCjY",
+    logo: "",
+  },
+  {
+    name: "Sandvik Coromant",
+    youtubeVideoId: "rXxw7SheUM0",
+    logo: "",
+  },
+  { 
+    name: "PERTAABI",
+    youtubeVideoId: "gBpn0EEv8kM",
+    logo: "",
+  },
+  { 
+    name: "PT Dyno Nobel",
+    youtubeVideoId: "yZiGK5Tndtk",
+    logo: "",
+  },
+  { 
+    name: "PT Mifa Bersaudara",
+    youtubeVideoId: "NWEZ18Psnuc",
+    logo: "",
+  },
+  { 
+    name: "PT Mineral Alam Abadi",
+    youtubeVideoId: "DF04vkgfP8s",
+    logo: "",
+  },
+  { 
+    name: "PT Antam",
+    youtubeVideoId: "sv7CIpHAQg0",
+    logo: "",
   },
 ];
